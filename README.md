@@ -1,4 +1,4 @@
-<p align="center"><a href="https://ruchidhal.github.io"><img width="80%" alt="Hello, I'm Subhashree. I do open source!" src="./header.png" /></a></p>
+<p align="center"><a href="https://ruchidhal.github.io"><img width="80%" alt="Hello, I'm Subhashree. I do open source!" src="https://github.com/RuchiDhal/RuchiDhal/raw/main/header.png" /></a></p>
 
 <p align="center">
 A DevOps Engineer with wide range skils to scale any system to its best form possible.
