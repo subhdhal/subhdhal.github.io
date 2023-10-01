@@ -1,8 +1,23 @@
 <p align="center"><a href="https://ruchidhal.github.io"><img width="80%" alt="Hello, I'm Subhashree. I do open source!" src="https://github.com/RuchiDhal/RuchiDhal/raw/main/header.png" /></a></p>
 
 <p align="center">
-A DevOps Engineer with wide range skils to scale any system to its best form possible.
+I am a DevOps Engineer with wide range skils to scale any system to its best form possible, primarily working on AWS.
 </p>
+
+<h3 align="center"> Reach me on </h3>
+<p align="center">
+  <a href="https://www.linkedin.com/in/subhashree-devops">
+    <img src="https://www.vectorlogo.zone/logos/linkedin/linkedin-tile.svg" alt="linkedin" title="linkedin" width="40" height="40"/>
+  </a>
+  <a href="https://github.com/subhdhal">
+    <img src="https://www.vectorlogo.zone/logos/github/github-tile.svg" alt="github" title="github" width="40" height="40"/>
+  </a>
+  <a href="https://twitter.com/subhdhal">
+    <img src="https://www.vectorlogo.zone/logos/twitter/twitter-tile.svg" alt="twitter" title="twitter" width="40" height="40"/>
+  </a>
+</p>
+
+---
 
 <h3 align="center"> OS Stack </h3>
 <p align="center">
