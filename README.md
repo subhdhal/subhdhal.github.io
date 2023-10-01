@@ -1,4 +1,4 @@
-<p align="center"><a href="https://ruchidhal.github.io"><img width="80%" alt="Hello, I'm Subhashree. I do open source!" src="https://github.com/RuchiDhal/RuchiDhal/raw/main/header.png" /></a></p>
+<p align="center"><a href="https://subhdhal.github.io"><img width="80%" alt="Hello, I'm Subhashree. I do open source!" src="https://github.com/RuchiDhal/RuchiDhal/raw/main/header.png" /></a></p>
 
 <p align="center">
 I am a DevOps Engineer with wide range skils to scale any system to its best form possible, primarily working on AWS.
