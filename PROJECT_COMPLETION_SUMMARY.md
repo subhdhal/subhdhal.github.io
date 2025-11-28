@@ -140,7 +140,6 @@ posts/
 
 #### Updated `index.html`
 - Correct title: "Senior Platform Engineer | Cloud Security & DevSecOps Specialist"
-- Email: subhashreedhal5@gmail.com
 
 ---
 
