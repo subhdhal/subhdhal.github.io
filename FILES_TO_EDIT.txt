@@ -1,0 +1,200 @@
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                    FILES YOU NEED TO EDIT - PRIORITY ORDER                   ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+🔴 MUST EDIT (Required for any website)
+═══════════════════════════════════════════════════════════════════════════════
+
+1. index.html (HOME PAGE - START HERE!)
+   ├─ Line 63: Change <title>Subhashree Dhal - DevOps Engineer
+   ├─ Line 65: Change <h1>Subhashree Dhal
+   ├─ Line 66: Change <p class="subtitle">@subhdhal
+   ├─ Line 67: Change <p class="description">DevOps Engineer...
+   ├─ Lines 71-96: Update all social media links
+   │  ├─ GitHub URL
+   │  ├─ Twitter URL
+   │  ├─ LinkedIn URL
+   │  └─ Email address
+   └─ Time: ~5 minutes
+
+2. about.html (ABOUT PAGE)
+   ├─ Line ~50-58: Update "Who I Am" section
+   ├─ Line ~67-85: Update "What I Do" section
+   ├─ Lines ~91-150: Update "Tech Stack" section
+   ├─ Lines ~154-171: Update "Get In Touch" section
+   └─ Time: ~5 minutes
+
+3. resume.html (RESUME PAGE)
+   ├─ Lines 49-51: Update name, title, email, social links
+   ├─ Lines 60-70: Update professional summary
+   ├─ Lines 73-130: Update all job experience
+   ├─ Lines 133-165: Update technical skills
+   ├─ Lines 168-180: Update certifications
+   ├─ Lines 183-195: Update education
+   └─ Time: ~15 minutes
+
+🟡 SHOULD EDIT (Highly recommended)
+═══════════════════════════════════════════════════════════════════════════════
+
+4. posts.html (BLOG LISTING PAGE)
+   ├─ Lines 48-82: Update blog post titles, dates, links
+   ├─ Make sure href paths match actual file names
+   ├─ Edit descriptions to match your posts
+   └─ Time: ~5 minutes
+
+5. posts/*.html (BLOG POST CONTENT) - Edit as needed
+   ├─ posts/kubernetes-best-practices.html (~5 min)
+   ├─ posts/terraform-aws-infrastructure.html (~5 min)
+   ├─ posts/ci-cd-pipeline-setup.html (~5 min)
+   └─ posts/monitoring-observability.html (~5 min)
+
+🟢 NICE TO HAVE (Optional but recommended)
+═══════════════════════════════════════════════════════════════════════════════
+
+6. css/style.css (COLORS & STYLING)
+   ├─ Line 3: Change --accent-color: #ff6b6b;
+   ├─ Suggestions:
+   │  ├─ Blue: #0066ff
+   │  ├─ Green: #00d084
+   │  ├─ Purple: #9d4edd
+   │  └─ Orange: #ff8c42
+   └─ Time: ~2 minutes (if you decide to change)
+
+7. favicon.svg (OPTIONAL)
+   ├─ Replace with your own icon/logo
+   └─ Time: Optional (will work with placeholder)
+
+✅ DON'T EDIT (Leave as is)
+═══════════════════════════════════════════════════════════════════════════════
+
+- js/main.js (Dark mode, smooth scrolling - don't touch!)
+- .gitignore (Git configuration)
+- .git/ folder (Version control - auto-managed)
+- Documentation files (For reference only)
+
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                          QUICK EDITING TIPS                                  ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+FIND & REPLACE METHOD (FASTEST!)
+─────────────────────────────────
+Use VS Code Find & Replace (Cmd+H or Ctrl+H):
+
+1. Find: "Subhashree Dhal"
+   Replace: "Your Full Name"
+   Click "Replace All"
+
+2. Find: "subhdhal"
+   Replace: "your_github_username"
+   Click "Replace All"
+
+3. Find: "subhashree@example.com"
+   Replace: "your@email.com"
+   Click "Replace All"
+
+This will update ALL files at once!
+
+
+MANUAL EDITING METHOD (IF PREFERRED)
+────────────────────────────────────
+Open each file and manually update:
+1. index.html
+2. about.html
+3. resume.html
+4. posts.html
+5. posts/*.html
+
+
+EXACT TEXT TO SEARCH FOR & REPLACE
+═══════════════════════════════════════════════════════════════════════════════
+
+❌ OLD                               ✅ NEW
+────────────────────────────────────────────────────────────────────────────────
+Subhashree Dhal                  →  Your Full Name
+@subhdhal                        →  @your_github_handle
+subhashree@example.com           →  your@email.com
+https://github.com/subhdhal      →  https://github.com/your_username
+https://twitter.com/subhdhal     →  https://twitter.com/your_handle
+https://linkedin.com/in/subhashree-devops → https://linkedin.com/in/your_profile
+
+DevOps Engineer at Red Hat       →  Your Job Title
+specializing in OpenShift        →  Your Specialization
+
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                        DEPLOYMENT COMMANDS                                   ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+After editing all files:
+
+$ cd /Users/subhashreedhal/subhdhal.github.io
+$ git add .
+$ git commit -m "Update website with my information"
+$ git push origin main
+
+That's it! Your site goes live in 1-5 minutes. ✨
+
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                         ESTIMATED TIME                                       ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+- index.html:        5 minutes
+- about.html:        5 minutes  
+- resume.html:      15 minutes
+- posts.html:        5 minutes
+- blog posts:       20 minutes (or skip, edit later)
+- css/style.css:     2 minutes (optional)
+──────────────────────────────
+TOTAL:            15-30 minutes (without blog posts)
+                  35-50 minutes (with blog posts)
+
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                    FILE STRUCTURE REFERENCE                                  ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+📁 Your Repository
+│
+├── 📄 index.html           ← EDIT THIS FIRST!
+├── 📄 about.html           ← EDIT SECOND
+├── 📄 resume.html          ← EDIT THIRD
+├── 📄 posts.html           ← EDIT FOURTH
+│
+├── 📁 posts/               ← Blog posts
+│   ├── 📄 kubernetes-best-practices.html
+│   ├── 📄 terraform-aws-infrastructure.html
+│   ├── 📄 ci-cd-pipeline-setup.html
+│   └── 📄 monitoring-observability.html
+│
+├── 📁 css/
+│   └── 📄 style.css        ← OPTIONAL: Change colors
+│
+├── 📁 js/
+│   └── 📄 main.js          ← DO NOT EDIT
+│
+└── 📁 Documentation
+    ├── 📄 START_HERE.md
+    ├── 📄 QUICK_START.md
+    ├── 📄 SETUP.md
+    ├── 📄 CUSTOMIZATION.md
+    ├── 📄 CSS_CUSTOMIZATION.md
+    ├── 📄 DEPLOYMENT_READY.md
+    ├── 📄 PROJECT_SUMMARY.md
+    └── �� FILES_TO_EDIT.txt (THIS FILE!)
+
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                         READY TO START?                                      ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+1. Open index.html in your editor
+2. Find and replace your information
+3. Do the same for other HTML files
+4. Run the git commands above
+5. Your website is live! 🎉
+
+Questions? Check the documentation files included in your repository!
+
+Good luck! 🚀

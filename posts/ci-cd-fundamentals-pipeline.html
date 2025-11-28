@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CI/CD Fundamentals: Building Automated Deployment Pipelines - Subhashree Dhal</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="icon" type="image/svg+xml" href="../favicon.svg">
+</head>
+<body>
+    <div class="container">
+        <!-- Navigation -->
+        <nav class="nav">
+            <ul class="nav-list">
+                <li><a href="../index.html">home</a></li>
+                <li><a href="../about.html">about</a></li>
+                <li><a href="../posts.html" class="active">posts</a></li>
+                <li><a href="../resume.html">resume</a></li>
+            </ul>
+            <div class="theme-toggle">
+                <button id="theme-btn" class="theme-btn" aria-label="Toggle dark mode">
+                    <svg class="sun-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="content">
+            <article>
+                <h1>CI/CD Fundamentals: Building Automated Deployment Pipelines</h1>
+                <p class="post-date">November 2025</p>
+                
+                <section>
+                    <h2>Introduction</h2>
+                    <p>
+                        Continuous Integration and Continuous Deployment (CI/CD) is the backbone of modern software delivery. 
+                        Rather than manually building, testing, and deploying code, CI/CD pipelines automate these processes, 
+                        enabling teams to deliver code changes frequently and reliably. In this post, I'll explain CI/CD fundamentals 
+                        and how to build effective pipelines.
+                    </p>
+                </section>
+
+                <section>
+                    <h2>What is CI/CD?</h2>
+                    <p>
+                        CI/CD is actually two distinct but complementary practices:
+                    </p>
+                    <ul>
+                        <li><strong>Continuous Integration (CI):</strong> Code changes are automatically tested as soon as they're committed</li>
+                        <li><strong>Continuous Deployment (CD):</strong> Code that passes testing is automatically deployed to production</li>
+                    </ul>
+                    <p>
+                        Together, they create a pipeline that moves code from development to production with minimal human intervention.
+                    </p>
+                </section>
+
+                <section>
+                    <h2>The Traditional vs. CI/CD Approach</h2>
+                    <pre><code>TRADITIONAL APPROACH (Slow & Error-Prone)
+┌──────────────────────────────────────────────────────┐
+│                                                        │
+│  Developer writes code  → Waits for QA team         │
+│                           (days/weeks)               │
+│                                                        │
+│  QA manually tests code → Reports bugs               │
+│                           Developer fixes             │
+│                           Re-test (cycle repeats)    │
+│                                                        │
+│  After weeks: Code deployed → Bugs in production    │
+│              → Rollback required → Weeks to fix      │
+│                                                        │
+└──────────────────────────────────────────────────────┘
+
+CI/CD APPROACH (Fast & Reliable)
+┌──────────────────────────────────────────────────────┐
+│                                                        │
+│  Developer commits code → Pipeline kicks off         │
+│                           (seconds)                  │
+│                                                        │
+│  Automated tests run → Results in minutes           │
+│                                                        │
+│  If tests pass → Code deployed to production        │
+│                  (minutes)                           │
+│                                                        │
+│  If tests fail → Automatic notification             │
+│                  Developer fixes immediately        │
+│                                                        │
+│  Result: Safe deployments every commit              │
+│          (multiple times per day)                    │
+│                                                        │
+└──────────────────────────────────────────────────────┘</code></pre>
+                </section>
+
+                <section>
+                    <h2>CI/CD Pipeline Architecture</h2>
+                    <pre><code>Complete CI/CD Pipeline Flow:
+
+┌─────────────┐
+│  Developer  │
+│  Commits    │
+│   Code      │
+└──────┬──────┘
+       │
+       ↓
+┌─────────────────────┐
+│   1. TRIGGER        │
+│ Webhook from Git    │
+│ (GitHub, GitLab)    │
+└──────┬──────────────┘
+       │
+       ↓
+┌─────────────────────┐
+│  2. SOURCE          │
+│ Checkout code       │
+│ from repository     │
+└──────┬──────────────┘
+       │
+       ↓
+┌─────────────────────┐
+│  3. BUILD           │
+│ Compile code        │
+│ Run unit tests      │
+│ Run linters         │
+└──────┬──────────────┘
+       │
+       ├─ TESTS FAIL? → Notify developer ✗
+       │
+       ↓
+┌─────────────────────┐
+│  4. SECURITY        │
+│ SAST scanning       │
+│ Dependency check    │
+│ Container scan      │
+└──────┬──────────────┘
+       │
+       ├─ VULNERABILITIES? → Stop & notify ✗
+       │
+       ↓
+┌─────────────────────┐
+│  5. ARTIFACT        │
+│ Create Docker image │
+│ Push to registry    │
+└──────┬──────────────┘
+       │
+       ↓
+┌─────────────────────┐
+│  6. DEPLOY (DEV)    │
+│ Deploy to dev       │
+│ Run smoke tests     │
+└──────┬──────────────┘
+       │
+       ├─ DEV TESTS FAIL? → Investigate ✗
+       │
+       ↓
+┌─────────────────────┐
+│  7. DEPLOY (STAGING)│
+│ Deploy to staging   │
+│ Run full test suite │
+└──────┬──────────────┘
+       │
+       ├─ STAGING TESTS FAIL? → Investigate ✗
+       │
+       ↓
+┌─────────────────────┐
+│  8. APPROVAL        │
+│ Manual gate for     │
+│ production (optional)│
+└──────┬──────────────┘
+       │
+       ↓
+┌─────────────────────┐
+│  9. DEPLOY (PROD)   │
+│ Deploy to production│
+│ Health checks       │
+└──────┬──────────────┘
+       │
+       ↓
+┌─────────────────────┐
+│  10. MONITOR        │
+│ Track error rates   │
+│ Monitor performance │
+│ Alert on issues     │
+└─────────────────────┘</code></pre>
+                </section>
+
+                <section>
+                    <h2>Key CI/CD Components</h2>
+                    
+                    <h3>1. Version Control System (Git)</h3>
+                    <p>
+                        The foundation: developers push code to a central repository. CI/CD pipelines trigger whenever code is pushed.
+                    </p>
+
+                    <h3>2. CI/CD Server</h3>
+                    <p>
+                        The orchestrator: monitors the repository, executes pipeline steps, and reports results. Popular options:
+                    </p>
+                    <ul>
+                        <li><strong>GitHub Actions:</strong> Built into GitHub, free for public repos</li>
+                        <li><strong>GitLab CI/CD:</strong> Built into GitLab, powerful for complex workflows</li>
+                        <li><strong>Jenkins:</strong> Open-source, self-hosted, highly customizable</li>
+                        <li><strong>CircleCI:</strong> Cloud-based, developer-friendly</li>
+                        <li><strong>AWS CodePipeline:</strong> AWS-native, integrates with AWS services</li>
+                    </ul>
+
+                    <h3>3. Build & Test Automation</h3>
+                    <p>
+                        Automatically compile code and run tests:
+                    </p>
+                    <pre><code># Example: Node.js build and test
+npm install              # Install dependencies
+npm run lint            # Check code style
+npm run test            # Run unit tests
+npm run build           # Build application
+npm run test:e2e        # Run end-to-end tests</code></pre>
+
+                    <h3>4. Artifact Repository</h3>
+                    <p>
+                        Store built artifacts (Docker images, packages). Examples:
+                    </p>
+                    <ul>
+                        <li>Docker Hub or ECR (container images)</li>
+                        <li>npm Registry or Artifactory (packages)</li>
+                        <li>S3 (compiled binaries)</li>
+                    </ul>
+
+                    <h3>5. Deployment Infrastructure</h3>
+                    <p>
+                        Multiple environments for gradual rollout:
+                    </p>
+                    <ul>
+                        <li><strong>Development:</strong> Latest code, quick feedback</li>
+                        <li><strong>Staging:</strong> Production-like environment for testing</li>
+                        <li><strong>Production:</strong> Live user-facing system</li>
+                    </ul>
+
+                    <h3>6. Monitoring & Observability</h3>
+                    <p>
+                        Detect issues post-deployment:
+                    </p>
+                    <ul>
+                        <li>Error rate monitoring</li>
+                        <li>Performance metrics (latency, throughput)</li>
+                        <li>Custom business metrics</li>
+                        <li>Automated alerts and rollback</li>
+                    </ul>
+                </section>
+
+                <section>
+                    <h2>Practical CI/CD Pipeline Example</h2>
+                    <pre><code># .github/workflows/ci-cd.yml (GitHub Actions)
+
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+jobs:
+  # Stage 1: Build & Test
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Lint code
+        run: npm run lint
+      
+      - name: Run unit tests
+        run: npm run test
+      
+      - name: Run coverage
+        run: npm run test:coverage
+      
+      - name: Build application
+        run: npm run build
+
+  # Stage 2: Security Scanning
+  security:
+    runs-on: ubuntu-latest
+    needs: build
+    
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Dependency check
+        run: npm audit --production
+      
+      - name: SAST scanning
+        uses: github/super-linter@v4
+        env:
+          DEFAULT_BRANCH: main
+
+  # Stage 3: Build & Push Docker Image
+  docker:
+    runs-on: ubuntu-latest
+    needs: security
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Build Docker image
+        run: docker build -t myapp:${{ github.sha }} .
+      
+      - name: Push to registry
+        run: |
+          echo ${{ secrets.DOCKER_PASSWORD }} | docker login -u ${{ secrets.DOCKER_USER }} --password-stdin
+          docker push myapp:${{ github.sha }}
+
+  # Stage 4: Deploy
+  deploy:
+    runs-on: ubuntu-latest
+    needs: docker
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+      - name: Deploy to staging
+        run: |
+          kubectl set image deployment/app app=myapp:${{ github.sha }} --namespace staging
+      
+      - name: Run smoke tests
+        run: curl -f https://staging.example.com/health
+      
+      - name: Manual approval for production
+        uses: trstringer/manual-approval@v1
+        with:
+          secret: ${{ secrets.GITHUB_TOKEN }}
+          approvers: 'senior-devops'
+      
+      - name: Deploy to production
+        run: |
+          kubectl set image deployment/app app=myapp:${{ github.sha }} --namespace production
+      
+      - name: Health check
+        run: curl -f https://example.com/health</code></pre>
+                </section>
+
+                <section>
+                    <h2>CI/CD Best Practices</h2>
+                    
+                    <h3>1. Fast Feedback Loop</h3>
+                    <ul>
+                        <li>Pipeline should complete in 5-10 minutes</li>
+                        <li>Run fast tests first, slow tests later</li>
+                        <li>Parallelize where possible</li>
+                    </ul>
+
+                    <h3>2. Fail Fast</h3>
+                    <ul>
+                        <li>Stop pipeline as soon as a stage fails</li>
+                        <li>Don't waste time on subsequent stages if something is broken</li>
+                        <li>Notify developer immediately</li>
+                    </ul>
+
+                    <h3>3. Automated Testing</h3>
+                    <ul>
+                        <li>Unit tests for every code change</li>
+                        <li>Integration tests for connected components</li>
+                        <li>End-to-end tests before production</li>
+                        <li>Minimum 80% code coverage</li>
+                    </ul>
+
+                    <h3>4. Immutable Artifacts</h3>
+                    <ul>
+                        <li>Build once, deploy everywhere</li>
+                        <li>Don't rebuild the same code for different environments</li>
+                        <li>Tag artifacts with commit hash for traceability</li>
+                    </ul>
+
+                    <h3>5. Secrets Management</h3>
+                    <ul>
+                        <li>Never commit secrets to git</li>
+                        <li>Use environment variables or secret managers (AWS Secrets Manager, HashiCorp Vault)</li>
+                        <li>Rotate secrets regularly</li>
+                    </ul>
+
+                    <h3>6. Monitoring & Alerting</h3>
+                    <ul>
+                        <li>Monitor application health post-deployment</li>
+                        <li>Set up automated rollback on critical errors</li>
+                        <li>Track deployment metrics (frequency, duration, failure rate)</li>
+                    </ul>
+
+                    <h3>7. Documentation</h3>
+                    <ul>
+                        <li>Document pipeline steps and requirements</li>
+                        <li>Keep runbooks for common issues</li>
+                        <li>Record deployment history and changes</li>
+                    </ul>
+                </section>
+
+                <section>
+                    <h2>Common Pitfalls to Avoid</h2>
+                    
+                    <p><strong>❌ Slow Pipelines:</strong> If tests take 30+ minutes, developers won't wait for results</p>
+                    <p><strong>Solution:</strong> Parallelize, use test sharding, run slow tests nightly</p>
+                    
+                    <p><strong>❌ Flaky Tests:</strong> Tests that fail randomly break developer trust</p>
+                    <p><strong>Solution:</strong> Fix root causes, isolate tests, use proper test environments</p>
+                    
+                    <p><strong>❌ Manual Approval Steps:</strong> If humans must approve every deployment, it's not continuous</p>
+                    <p><strong>Solution:</strong> Automate everything, use feature flags for risky changes</p>
+                    
+                    <p><strong>❌ Inadequate Monitoring:</strong> Deploying without monitoring is reckless</p>
+                    <p><strong>Solution:</strong> Implement comprehensive observability before deploying</p>
+                    
+                    <p><strong>❌ No Rollback Plan:</strong> If something breaks, you need a quick way to revert</p>
+                    <p><strong>Solution:</strong> Automate rollback, keep previous versions available</p>
+                </section>
+
+                <section>
+                    <h2>Measuring CI/CD Success</h2>
+                    <p>
+                        Track these metrics to understand your CI/CD effectiveness:
+                    </p>
+                    <ul>
+                        <li><strong>Deployment Frequency:</strong> How often can you deploy? (target: daily)</li>
+                        <li><strong>Lead Time for Changes:</strong> Time from commit to production (target: hours)</li>
+                        <li><strong>Mean Time to Recovery (MTTR):</strong> Time to fix production issues (target: &lt;1 hour)</li>
+                        <li><strong>Change Failure Rate:</strong> Percentage of deployments causing issues (target: &lt;15%)</li>
+                        <li><strong>Pipeline Success Rate:</strong> Percentage of pipelines that pass (target: &gt;95%)</li>
+                    </ul>
+                </section>
+
+                <section>
+                    <h2>Conclusion</h2>
+                    <p>
+                        CI/CD is not a tool—it's a practice and culture of automation. By automating build, test, and deployment 
+                        processes, teams can deliver code safely and frequently. The key is starting small, measuring results, 
+                        and continuously improving the pipeline.
+                    </p>
+                    <p>
+                        Start with basic CI (automated tests on every commit), then add CD (automated deployments) once you have 
+                        confidence in your testing. You'll quickly see the benefits in team velocity and code quality.
+                    </p>
+                </section>
+
+                <div style="margin-top: 2rem; padding-top: 2rem; border-top: 1px solid var(--border-color);">
+                    <p><a href="../posts.html">← Back to all posts</a></p>
+                </div>
+            </article>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>&copy; 2025 Subhashree Dhal. All rights reserved.</p>
+        </footer>
+    </div>
+
+    <script src="../js/main.js"></script>
+</body>
+</html>

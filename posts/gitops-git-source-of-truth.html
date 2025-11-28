@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GitOps: Git as the Source of Truth for Infrastructure - Subhashree Dhal</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="icon" type="image/svg+xml" href="../favicon.svg">
+</head>
+<body>
+    <div class="container">
+        <!-- Navigation -->
+        <nav class="nav">
+            <ul class="nav-list">
+                <li><a href="../index.html">home</a></li>
+                <li><a href="../about.html">about</a></li>
+                <li><a href="../posts.html" class="active">posts</a></li>
+                <li><a href="../resume.html">resume</a></li>
+            </ul>
+            <div class="theme-toggle">
+                <button id="theme-btn" class="theme-btn" aria-label="Toggle dark mode">
+                    <svg class="sun-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="content">
+            <article>
+                <h1>GitOps: Git as the Source of Truth for Infrastructure</h1>
+                <p class="post-date">November 2025</p>
+                
+                <section>
+                    <h2>Introduction</h2>
+                    <p>
+                        GitOps is a paradigm that applies Git version control principles to infrastructure and application deployment. 
+                        Instead of applying configuration changes imperatively, GitOps treats your entire infrastructure as code stored 
+                        in Git. Changes are made through pull requests, reviewed by humans, and automatically applied by controllers. 
+                        This approach brings code review, audit trails, and versioning to infrastructure management.
+                    </p>
+                </section>
+
+                <section>
+                    <h2>Traditional Deployment vs. GitOps</h2>
+                    <pre><code>TRADITIONAL IMPERATIVE APPROACH (Push-Based)
+┌─────────────┐
+│  DevOps     │
+│  Engineer   │
+└──────┬──────┘
+       │
+       │ SSH into servers
+       │ Run manual commands
+       │ Edit config files
+       ↓
+┌─────────────────────────────────────────┐
+│  Production Infrastructure               │
+│  (Manual state, no audit trail)         │
+└─────────────────────────────────────────┘
+
+Problems:
+❌ No version control for deployments
+❌ Manual commands prone to errors
+❌ Difficult to rollback
+❌ Hard to debug what happened
+❌ Limited audit trail
+❌ Inconsistent state across environments
+
+
+GITOPS DECLARATIVE APPROACH (Pull-Based)
+┌──────────────┐
+│  Git         │
+│  Repository  │
+│  (Git main)  │
+└──────┬───────┘
+       │
+       │ Desired state
+       │ All reviewed
+       │ Versioned
+       ↓
+┌──────────────┐          ┌──────────────────┐
+│  GitOps      │ ◄────────│ Kubernetes       │
+│  Controller  │ Watches  │ Cluster          │
+│  (ArgoCD)    │ ─────────┤ (Actual state)   │
+└──────────────┘ Syncs    └──────────────────┘
+       │
+       │ Compares
+       │ Git state vs
+       │ Actual state
+       ↓
+  Reconciles to match
+
+Benefits:
+✅ Version control for all changes
+✅ Pull request reviews before deployment
+✅ Complete audit trail (git log shows everything)
+✅ Easy rollback (revert Git commit)
+✅ Consistent state verification
+✅ Declarative (describe desired state, not steps)</code></pre>
+                </section>
+
+                <section>
+                    <h2>Core GitOps Principles</h2>
+                    
+                    <h3>1. Declarative Infrastructure</h3>
+                    <p>
+                        Declare the desired state of your system, not the steps to get there.
+                    </p>
+                    <pre><code>❌ IMPERATIVE (wrong way):
+  1. Create Kubernetes deployment
+  2. Set 3 replicas
+  3. Configure resource limits
+  4. Set up health checks
+  5. Deploy image version 1.2.3
+
+✅ DECLARATIVE (GitOps way):
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-app
+spec:
+  replicas: 3
+  template:
+    spec:
+      containers:
+      - name: app
+        image: myapp:1.2.3
+        resources:
+          requests:
+            cpu: 250m
+          limits:
+            cpu: 500m
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+
+GitOps controller ensures this state exists.
+If it doesn't, it automatically fixes it.</code></pre>
+
+                    <h3>2. Version Control as Source of Truth</h3>
+                    <p>
+                        Git is the single source of truth for all infrastructure and application configuration.
+                    </p>
+                    <ul>
+                        <li>All changes made through Git (never direct kubectl commands in production)</li>
+                        <li>Every change has a commit message explaining why</li>
+                        <li>Complete audit trail of who changed what and when</li>
+                        <li>Rollback by reverting a Git commit</li>
+                    </ul>
+
+                    <h3>3. Continuous Reconciliation</h3>
+                    <p>
+                        GitOps controllers continuously compare Git state with actual cluster state and reconcile differences.
+                    </p>
+                    <pre><code>RECONCILIATION LOOP
+
+Every 3-5 minutes (or triggered by webhook):
+
+1. Check Git repository
+   ↓
+2. Read desired state from YAML files
+   ↓
+3. Connect to Kubernetes cluster
+   ↓
+4. Read actual current state
+   ↓
+5. Compare: Git state == Actual state?
+   ↓
+   YES → Do nothing (system is healthy)
+   NO → Apply changes to match Git
+   ↓
+6. Report status (succeeded/failed)
+   ↓
+7. Send notifications if needed</code></pre>
+
+                    <h3>4. Pull-Based Not Push-Based</h3>
+                    <p>
+                        GitOps controllers pull desired state from Git and apply it. They don't receive push requests from CI/CD systems.
+                    </p>
+                    <pre><code>PUSH-BASED (Traditional CI/CD)
+┌─────────┐
+│  CI/CD  │  
+│ System  │────────ssh──────→ ┌──────────────┐
+└─────────┘                    │ Prod Server  │
+                               └──────────────┘
+                               
+Risk: If CI/CD system is compromised, 
+      attacker has access to prod servers
+
+PULL-BASED (GitOps)
+┌──────────┐                   ┌──────────┐
+│ Git      │                   │ GitOps   │
+│ Repo     │ ◄───────reads── │ Controller│
+│ (Source) │                   │ (In      │
+└──────────┘                   │ Cluster) │
+                               └──────────┘
+
+Benefit: GitOps controller is inside cluster.
+         CI/CD system only needs to push to Git.
+         Cluster credentials never exposed to CI/CD.</code></pre>
+                </section>
+
+                <section>
+                    <h2>GitOps Architecture</h2>
+                    <pre><code>┌────────────────────────────────────────────────┐
+│           Developer Workflow                    │
+├────────────────────────────────────────────────┤
+│                                                  │
+│ 1. Developer creates branch                     │
+│    git checkout -b feature/add-env-var          │
+│                                                  │
+│ 2. Edit deployment manifest (YAML)              │
+│    vim deployments/web-app.yaml                 │
+│    (changes: image version, replicas, env vars) │
+│                                                  │
+│ 3. Commit and push                              │
+│    git add deployments/web-app.yaml             │
+│    git commit -m "Update app to v1.2.3"        │
+│    git push origin feature/add-env-var          │
+│                                                  │
+│ 4. Create Pull Request on GitHub/GitLab         │
+│    Describe: "Update to latest version"        │
+│                                                  │
+│ 5. Team reviews changes                         │
+│    - Code review comments                       │
+│    - CI checks pass (linting, schema validation)│
+│    - Approval from senior engineer              │
+│                                                  │
+│ 6. Merge to main branch                         │
+│    (Web hook notifies GitOps controller)        │
+│                                                  │
+└────────────────────────────────────────────────┘
+       │
+       ↓
+┌────────────────────────────────────────────────┐
+│       GitOps Controller (ArgoCD/Flux)          │
+├────────────────────────────────────────────────┤
+│                                                  │
+│ 1. Webhook received (Git was updated)          │
+│    OR periodic sync (every 3-5 minutes)        │
+│                                                  │
+│ 2. Fetch latest from Git main branch           │
+│                                                  │
+│ 3. Parse YAML manifests                        │
+│                                                  │
+│ 4. Connect to Kubernetes cluster               │
+│                                                  │
+│ 5. Compare Git state vs Cluster state          │
+│                                                  │
+│ 6. If different:                               │
+│    - Update deployments                        │
+│    - Roll out new versions                     │
+│    - Update configurations                     │
+│    - Apply ConfigMaps / Secrets                │
+│                                                  │
+│ 7. Monitor rollout                             │
+│                                                  │
+│ 8. Report status                               │
+│    - Dashboard shows: In Sync / Out of Sync    │
+│    - Slack notification: "Deployed v1.2.3"    │
+│    - Alert if rollout failed                   │
+│                                                  │
+└────────────────────────────────────────────────┘
+       │
+       ↓
+┌────────────────────────────────────────────────┐
+│     Kubernetes Cluster (Production)            │
+├────────────────────────────────────────────────┤
+│                                                  │
+│ Deployments updated:                           │
+│ - Old pods terminated                          │
+│ - New pods started with image v1.2.3          │
+│ - Health checks pass                           │
+│ - Traffic gradually shifted (if rolling update)│
+│                                                  │
+│ Result: Production matches Git exactly         │
+│                                                  │
+└────────────────────────────────────────────────┘</code></pre>
+                </section>
+
+                <section>
+                    <h2>GitOps Tools & Implementations</h2>
+                    
+                    <h3>ArgoCD (Most Popular for Kubernetes)</h3>
+                    <ul>
+                        <li>Declarative GitOps CD for Kubernetes</li>
+                        <li>Web UI to visualize applications and sync status</li>
+                        <li>Automatic sync or manual approval options</li>
+                        <li>Multi-repo, multi-cluster support</li>
+                    </ul>
+
+                    <h3>Flux CD</h3>
+                    <ul>
+                        <li>Open-source GitOps for Kubernetes</li>
+                        <li>Lightweight and Kubernetes-native</li>
+                        <li>Uses Helm, Kustomize for templating</li>
+                        <li>Strong community and production-proven</li>
+                    </ul>
+
+                    <h3>Cloud-Native Options</h3>
+                    <ul>
+                        <li><strong>AWS:</strong> CodePipeline + CodeDeploy</li>
+                        <li><strong>Azure:</strong> GitOps enabled on AKS</li>
+                        <li><strong>Google Cloud:</strong> Cloud Deploy with Git integration</li>
+                    </ul>
+                </section>
+
+                <section>
+                    <h2>Practical GitOps Workflow Example</h2>
+                    <pre><code># Repository structure (Git)
+├── deployments/
+│   ├── web-app.yaml      # Deployment specification
+│   ├── web-svc.yaml      # Service
+│   └── web-hpa.yaml      # Horizontal Pod Autoscaler
+├── configs/
+│   ├── dev/
+│   │   └── kustomization.yaml
+│   ├── staging/
+│   │   └── kustomization.yaml
+│   └── prod/
+│       └── kustomization.yaml
+└── ArgoCD/
+    └── app.yaml          # ArgoCD Application manifest
+
+# Deploying a new version:
+# Step 1: Update image in Git
+vim deployments/web-app.yaml
+# Change: image: myapp:1.2.3 → image: myapp:1.3.0
+
+git add deployments/web-app.yaml
+git commit -m "Upgrade web-app to 1.3.0 (security fixes)"
+git push origin main
+
+# Step 2: ArgoCD notices Git changed (webhook)
+# - Fetches latest manifests from Git
+# - Compares with running Kubernetes resources
+# - Detects: Image differs (1.2.3 vs 1.3.0)
+# - Updates deployment
+# - Kubernetes initiates rolling update
+# - Old pods killed, new pods started
+# - Health checks verify new version is healthy
+
+# Step 3: Check status in ArgoCD UI
+# - Dashboard shows: "In Sync" (Git == Cluster)
+# - Commit hash visible (what version is running)
+# - Rollout progress visible
+
+# If new version breaks:
+# Step 4: Rollback via Git (no kubectl needed!)
+git revert HEAD~1   # Reverts to previous version
+git push origin main
+
+# ArgoCD immediately syncs back to 1.2.3</code></pre>
+                </section>
+
+                <section>
+                    <h2>GitOps Best Practices</h2>
+                    
+                    <h3>1. Single Source of Truth</h3>
+                    <ul>
+                        <li>All infrastructure in Git, nothing manual</li>
+                        <li>Never use kubectl apply directly in production</li>
+                        <li>Use feature branches for testing changes</li>
+                    </ul>
+
+                    <h3>2. Code Review Everything</h3>
+                    <ul>
+                        <li>Require pull request reviews before merging</li>
+                        <li>Automated checks: linting, schema validation, security scanning</li>
+                        <li>Approval from authorized personnel</li>
+                    </ul>
+
+                    <h3>3. Separate Configuration by Environment</h3>
+                    <ul>
+                        <li>Use directories or overlays for dev/staging/prod</li>
+                        <li>Different values per environment (resource limits, replicas)</li>
+                        <li>Shared base configurations to reduce duplication</li>
+                    </ul>
+
+                    <h3>4. Protect Secrets</h3>
+                    <ul>
+                        <li>Never commit plain-text secrets to Git</li>
+                        <li>Use sealed secrets or external secret management</li>
+                        <li>Rotate secrets regularly</li>
+                    </ul>
+
+                    <h3>5. Monitor and Alert</h3>
+                    <ul>
+                        <li>Track sync status (is cluster in sync with Git?)</li>
+                        <li>Alert on deployment failures</li>
+                        <li>Monitor application health post-deployment</li>
+                    </ul>
+
+                    <h3>6. Audit and Compliance</h3>
+                    <ul>
+                        <li>Leverage Git audit log (who changed what)</li>
+                        <li>Record timestamps for compliance</li>
+                        <li>Use Git signing for additional security</li>
+                    </ul>
+                </section>
+
+                <section>
+                    <h2>Common GitOps Patterns</h2>
+                    
+                    <h3>Pattern 1: App Repository + Config Repository</h3>
+                    <pre><code>Separate repositories for different concerns:
+
+app-repo (application code)
+├── src/
+├── Dockerfile
+├── tests/
+└── .github/workflows/  (builds Docker image)
+                        ↓
+                   Pushes to: image-registry/myapp:123abc
+
+config-repo (deployment configuration)
+├── deployments/
+│   └── web-app.yaml
+│       spec:
+│         containers:
+│         - image: image-registry/myapp:123abc
+└── .github/workflows/  (updates image in manifests)
+
+Benefit: App team and DevOps team can work independently
+         App team focuses on code quality
+         DevOps team focuses on deployment reliability</code></pre>
+
+                    <h3>Pattern 2: Progressive Delivery</h3>
+                    <p>
+                        Use GitOps with progressive deployment strategies:
+                    </p>
+                    <pre><code>Dev Environment:
+- Auto-sync enabled
+- Instant updates when Git changes
+- For fast feedback
+
+Staging Environment:
+- Manual sync (requires approval)
+- Health checks before promoting to prod
+- Smoke tests pass before moving forward
+
+Production Environment:
+- Manual sync (senior engineer approval)
+- Canary deployment (10% of traffic)
+- Monitor metrics
+- Auto-rollback if error rate increases
+- Gradually increase to 100%</code></pre>
+                </section>
+
+                <section>
+                    <h2>GitOps vs Traditional Deployment</h2>
+                    <table style="width:100%; border-collapse: collapse;">
+                        <tr>
+                            <th style="border: 1px solid var(--border-color); padding: 0.5rem;">Aspect</th>
+                            <th style="border: 1px solid var(--border-color); padding: 0.5rem;">Traditional</th>
+                            <th style="border: 1px solid var(--border-color); padding: 0.5rem;">GitOps</th>
+                        </tr>
+                        <tr>
+                            <td style="border: 1px solid var(--border-color); padding: 0.5rem;">Source of Truth</td>
+                            <td style="border: 1px solid var(--border-color); padding: 0.5rem;">Running system state</td>
+                            <td style="border: 1px solid var(--border-color); padding: 0.5rem;">Git repository</td>
+                        </tr>
+                        <tr>
+                            <td style="border: 1px solid var(--border-color); padding: 0.5rem;">Deployment Method</td>
+                            <td style="border: 1px solid var(--border-color); padding: 0.5rem;">Push from CI/CD</td>
+                            <td style="border: 1px solid var(--border-color); padding: 0.5rem;">Pull by controller</td>
+                        </tr>
+                        <tr>
+                            <td style="border: 1px solid var(--border-color); padding: 0.5rem;">Rollback</td>
+                            <td style="border: 1px solid var(--border-color); padding: 0.5rem;">Manual steps</td>
+                            <td style="border: 1px solid var(--border-color); padding: 0.5rem;">Git revert</td>
+                        </tr>
+                        <tr>
+                            <td style="border: 1px solid var(--border-color); padding: 0.5rem;">Audit Trail</td>
+                            <td style="border: 1px solid var(--border-color); padding: 0.5rem;">Limited</td>
+                            <td style="border: 1px solid var(--border-color); padding: 0.5rem;">Complete (git log)</td>
+                        </tr>
+                        <tr>
+                            <td style="border: 1px solid var(--border-color); padding: 0.5rem;">Compliance</td>
+                            <td style="border: 1px solid var(--border-color); padding: 0.5rem;">Difficult to prove</td>
+                            <td style="border: 1px solid var(--border-color); padding: 0.5rem;">Built-in (PR reviews)</td>
+                        </tr>
+                        <tr>
+                            <td style="border: 1px solid var(--border-color); padding: 0.5rem;">Disaster Recovery</td>
+                            <td style="border: 1px solid var(--border-color); padding: 0.5rem;">Restore from backups</td>
+                            <td style="border: 1px solid var(--border-color); padding: 0.5rem;">Redeploy from Git</td>
+                        </tr>
+                    </table>
+                </section>
+
+                <section>
+                    <h2>Conclusion</h2>
+                    <p>
+                        GitOps brings the power of version control, code review, and audit trails to infrastructure management. 
+                        By treating infrastructure as code stored in Git, teams gain consistency, auditability, and the ability 
+                        to track and rollback changes easily.
+                    </p>
+                    <p>
+                        The shift from imperative (telling the system what to do) to declarative (describing desired state) combined 
+                        with automated reconciliation creates systems that are more reliable, auditable, and easier to reason about.
+                    </p>
+                    <p>
+                        Start with a simple setup: one Git repo, one environment, one ArgoCD instance. Then gradually add complexity 
+                        as your team gains experience with the GitOps model.
+                    </p>
+                </section>
+
+                <div style="margin-top: 2rem; padding-top: 2rem; border-top: 1px solid var(--border-color);">
+                    <p><a href="../posts.html">← Back to all posts</a></p>
+                </div>
+            </article>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>&copy; 2025 Subhashree Dhal. All rights reserved.</p>
+        </footer>
+    </div>
+
+    <script src="../js/main.js"></script>
+</body>
+</html>

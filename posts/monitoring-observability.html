@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monitoring and Observability in Microservices - Subhashree Dhal</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="icon" type="image/svg+xml" href="../favicon.svg">
+</head>
+<body>
+    <div class="container">
+        <!-- Navigation -->
+        <nav class="nav">
+            <ul class="nav-list">
+                <li><a href="../index.html">home</a></li>
+                <li><a href="../about.html">about</a></li>
+                <li><a href="../posts.html" class="active">posts</a></li>
+                <li><a href="../resume.html">resume</a></li>
+            </ul>
+            <div class="theme-toggle">
+                <button id="theme-btn" class="theme-btn" aria-label="Toggle dark mode">
+                    <svg class="sun-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="content">
+            <article>
+                <h1>Monitoring and Observability in Microservices</h1>
+                <p class="post-date">August 22, 2025</p>
+                
+                <section>
+                    <h2>The Three Pillars of Observability</h2>
+                    <p>
+                        Observability in microservices is built on three fundamental pillars:
+                    </p>
+                    <ul>
+                        <li><strong>Metrics:</strong> Time-series data about system behavior</li>
+                        <li><strong>Logs:</strong> Event records of what happened in the system</li>
+                        <li><strong>Traces:</strong> Records of requests flowing through the system</li>
+                    </ul>
+                </section>
+
+                <section>
+                    <h2>Metrics with Prometheus</h2>
+                    <p>
+                        Prometheus scrapes metrics from your applications and services. Here's how to instrument your app:
+                    </p>
+                    <pre><code>from prometheus_client import Counter, Histogram, start_http_server
+import time
+
+# Create metrics
+request_count = Counter('app_requests_total', 'Total requests', ['method', 'endpoint'])
+request_duration = Histogram('app_request_duration_seconds', 'Request duration')
+
+@request_duration.time()
+def process_request(method, endpoint):
+    request_count.labels(method=method, endpoint=endpoint).inc()
+    # Process request
+    return "Success"
+
+# Start Prometheus metrics server
+start_http_server(8000)</code></pre>
+                </section>
+
+                <section>
+                    <h2>Centralized Logging with ELK Stack</h2>
+                    <p>
+                        The ELK Stack (Elasticsearch, Logstash, Kibana) provides centralized logging:
+                    </p>
+                    <pre><code># Logstash configuration
+input {
+  tcp {
+    port => 5000
+    codec => json
+  }
+}
+
+filter {
+  if [type] == "app-logs" {
+    grok {
+      match => { "message" => "%{TIMESTAMP_ISO8601:timestamp} \[%{DATA:service}\] %{LOGLEVEL:level} %{GREEDYDATA:message}" }
+    }
+  }
+}
+
+output {
+  elasticsearch {
+    hosts => ["elasticsearch:9200"]
+    index => "app-logs-%{+YYYY.MM.dd}"
+  }
+}</code></pre>
+                </section>
+
+                <section>
+                    <h2>Distributed Tracing with Jaeger</h2>
+                    <p>
+                        Distributed tracing helps you understand the flow of requests through your microservices:
+                    </p>
+                    <pre><code>from jaeger_client import Config
+
+def init_jaeger_tracer(service_name):
+    config = Config(
+        config={
+            'sampler': {
+                'type': 'const',
+                'param': 1,
+            },
+            'local_agent': {
+                'reporting_host': 'localhost',
+                'reporting_port': 6831,
+            },
+            'logging': True,
+        },
+        service_name=service_name,
+    )
+    return config.initialize_tracer()
+
+tracer = init_jaeger_tracer('my-service')
+
+with tracer.start_active_span('process_request') as scope:
+    # Your code here
+    pass</code></pre>
+                </section>
+
+                <section>
+                    <h2>Alert Management</h2>
+                    <p>
+                        Define meaningful alerts based on SLOs:
+                    </p>
+                    <pre><code># Prometheus alert rules
+groups:
+  - name: service_alerts
+    interval: 30s
+    rules:
+      - alert: HighErrorRate
+        expr: rate(http_requests_total{status=~"5.."}[5m]) > 0.05
+        for: 5m
+        annotations:
+          summary: "High error rate detected"
+          
+      - alert: HighLatency
+        expr: histogram_quantile(0.99, http_request_duration_seconds) > 1
+        for: 10m
+        annotations:
+          summary: "High request latency detected"</code></pre>
+                </section>
+
+                <section>
+                    <h2>Best Practices</h2>
+                    <ul>
+                        <li>Define SLOs and SLIs for your services</li>
+                        <li>Use structured logging (JSON format)</li>
+                        <li>Include correlation IDs in logs and traces</li>
+                        <li>Monitor both application and infrastructure metrics</li>
+                        <li>Alert on symptoms, not causes</li>
+                        <li>Implement log retention policies</li>
+                        <li>Use dashboards for visualization</li>
+                        <li>Practice runbooks for alerts</li>
+                        <li>Regularly review and update monitoring</li>
+                    </ul>
+                </section>
+
+                <section>
+                    <h2>Conclusion</h2>
+                    <p>
+                        Good observability is crucial for running reliable microservices. By implementing metrics, 
+                        logging, and tracing, you gain the visibility needed to troubleshoot issues quickly and 
+                        optimize your systems.
+                    </p>
+                </section>
+
+                <div style="margin-top: 2rem; padding-top: 2rem; border-top: 1px solid var(--border-color);">
+                    <p><a href="../posts.html">← Back to all posts</a></p>
+                </div>
+            </article>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>&copy; 2025 Subhashree Dhal. All rights reserved.</p>
+        </footer>
+    </div>
+
+    <script src="../js/main.js"></script>
+</body>
+</html>

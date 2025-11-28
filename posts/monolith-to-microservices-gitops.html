@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monolith to Microservices: A GitOps-Driven Migration Strategy - Subhashree Dhal</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="icon" type="image/svg+xml" href="../favicon.svg">
+</head>
+<body>
+    <div class="container">
+        <!-- Navigation -->
+        <nav class="nav">
+            <ul class="nav-list">
+                <li><a href="../index.html">home</a></li>
+                <li><a href="../about.html">about</a></li>
+                <li><a href="../posts.html" class="active">posts</a></li>
+                <li><a href="../resume.html">resume</a></li>
+            </ul>
+            <div class="theme-toggle">
+                <button id="theme-btn" class="theme-btn" aria-label="Toggle dark mode">
+                    <svg class="sun-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="content">
+            <article>
+                <h1>Monolith to Microservices: A GitOps-Driven Migration Strategy</h1>
+                <p class="post-date">November 2025</p>
+                
+                <section>
+                    <h2>Introduction</h2>
+                    <p>
+                        Migrating from a monolithic architecture to independently deployable microservices is one of the most challenging 
+                        transformations an engineering organization can undertake. In this post, I'll share how we successfully migrated from 
+                        a monolithic monorepo to microservices architecture using GitOps principles, achieving 3x faster release velocity.
+                    </p>
+                </section>
+
+                <section>
+                    <h2>The Starting Point: Monolithic Monorepo</h2>
+                    <p>
+                        Our starting architecture had several pain points:
+                    </p>
+                    <ul>
+                        <li><strong>Single Deployment Unit:</strong> Any change required deploying the entire application</li>
+                        <li><strong>Shared Dependencies:</strong> Tight coupling between teams through shared libraries</li>
+                        <li><strong>Bottlenecked Releases:</strong> One failing test in one component blocked all releases</li>
+                        <li><strong>Scaling Inefficiency:</strong> Couldn't scale individual components independently</li>
+                        <li><strong>Development Velocity:</strong> Teams blocked waiting for monolith builds and tests</li>
+                        <li><strong>Technology Lock-in:</strong> All services forced to use same tech stack</li>
+                    </ul>
+                </section>
+
+                <section>
+                    <h2>GitOps: The Guiding Philosophy</h2>
+                    <p>
+                        We adopted GitOps as our deployment philosophy:
+                    </p>
+                    <pre><code>GitOps Principles:
+1. Git as Source of Truth
+   - Infrastructure defined in Git
+   - Deployments triggered by Git commits
+   - Audit trail in version control
+
+2. Declarative Infrastructure
+   - Describe desired state
+   - Tools reconcile actual state
+
+3. Automated Reconciliation
+   - ArgoCD pulls desired state from Git
+   - Automatically deploys to Kubernetes
+   - Detects and alerts on drift
+
+4. Pull-Based Deployments
+   - ArgoCD pulls from Git (safer than push)
+   - No credentials on CI/CD systems
+   - Better for multi-cluster setups</code></pre>
+                </section>
+
+                <section>
+                    <h2>Migration Strategy: Strangler Pattern</h2>
+                    <p>
+                        Rather than a risky big-bang rewrite, we used the strangler pattern:
+                    </p>
+                    <pre><code>Phase 1: Infrastructure Setup
+├─ Deploy Kubernetes Cluster (EKS)
+├─ Install ArgoCD for GitOps deployment
+├─ Setup container registry (ECR)
+└─ Create Git repositories for microservices
+
+Phase 2: Strangler Implementation
+├─ Identify service boundaries
+├─ Extract first service from monolith
+│  ├─ Create service repository
+│  ├─ Write Helm charts
+│  ├─ Create ArgoCD Application
+│  ├─ Deploy to Kubernetes
+│  └─ Redirect traffic from monolith
+├─ Repeat for remaining services
+└─ Gradually shift more traffic
+
+Phase 3: Full Migration
+├─ All services deployed independently
+├─ Monolith becomes thin API gateway
+├─ Decommission monolith infrastructure
+└─ Complete separation of deployments</code></pre>
+                </section>
+
+                <section>
+                    <h2>Service-Specific CI/CD Pipelines</h2>
+                    <p>
+                        Each microservice now has its own independent CI/CD pipeline:
+                    </p>
+                    <pre><code># .github/workflows/deploy.yml for each service
+
+name: Build & Deploy Microservice
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/**'
+      - 'helm/**'
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Build Docker Image
+        run: docker build -t ${{ env.REGISTRY }}/${{ env.SERVICE }}:${{ github.sha }} .
+      
+      - name: Push to ECR
+        run: docker push ${{ env.REGISTRY }}/${{ env.SERVICE }}:${{ github.sha }}
+      
+      - name: Update Helm Values
+        run: |
+          sed -i "s|image: .*|image: ${{ env.REGISTRY }}/${{ env.SERVICE }}:${{ github.sha }}|" helm/values.yaml
+      
+      - name: Commit & Push (triggers ArgoCD)
+        run: |
+          git config --global user.email "ci@example.com"
+          git commit -am "Update image tag"
+          git push origin main</code></pre>
+
+                    <p>
+                        The key insight: committing to Git triggers ArgoCD, which handles deployment. No manual kubectl commands needed.
+                    </p>
+                </section>
+
+                <section>
+                    <h2>Helm Charts for Standardization</h2>
+                    <p>
+                        We created reusable Helm charts ensuring consistency:
+                    </p>
+                    <pre><code># helm/values.yaml - Standardized across services
+
+image:
+  repository: 123456789.dkr.ecr.us-east-1.amazonaws.com/service-name
+  tag: latest
+  pullPolicy: IfNotPresent
+
+replicas: 3
+
+resources:
+  requests:
+    cpu: 250m
+    memory: 512Mi
+  limits:
+    cpu: 500m
+    memory: 1Gi
+
+service:
+  type: ClusterIP
+  port: 8080
+  targetPort: 8080
+
+ingress:
+  enabled: true
+  className: nginx
+  hosts:
+    - host: service.example.com
+
+autoscaling:
+  enabled: true
+  minReplicas: 3
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 70</code></pre>
+                </section>
+
+                <section>
+                    <h2>ArgoCD: Declarative Deployment</h2>
+                    <p>
+                        ArgoCD Applications represent desired state:
+                    </p>
+                    <pre><code>apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: payment-service
+  namespace: argocd
+spec:
+  project: default
+  
+  source:
+    repoURL: https://github.com/org/payment-service
+    targetRevision: main
+    path: helm
+  
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: production
+  
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+    - CreateNamespace=true
+  
+  # Notifications on deployment
+  notifications:
+    slack:
+      channel: '#deployments'</code></pre>
+                </section>
+
+                <section>
+                    <h2>Managing Deployments at Scale</h2>
+                    <p>
+                        With 30+ microservices, we needed organization:
+                    </p>
+                    <ul>
+                        <li><strong>App of Apps Pattern:</strong> Central repository defines all microservice deployments</li>
+                        <li><strong>Environment Promotion:</strong> dev → staging → production via Git branches</li>
+                        <li><strong>Secrets Management:</strong> Sealed Secrets or AWS Secrets Manager integration</li>
+                        <li><strong>Rollback Strategy:</strong> Any Git revert = automatic rollback</li>
+                        <li><strong>Progressive Delivery:</strong> Canary deployments using Flagger</li>
+                    </ul>
+                </section>
+
+                <section>
+                    <h2>Challenges & Solutions</h2>
+                    <p>
+                        <strong>Challenge 1: Data Consistency</strong><br>
+                        Services that previously shared a database now need distributed transactions.
+                    </p>
+                    <ul>
+                        <li>Solution: Event-driven architecture with message queues (SQS/SNS)</li>
+                        <li>Eventual consistency instead of strong consistency</li>
+                        <li>Compensating transactions for rollback scenarios</li>
+                    </ul>
+
+                    <p>
+                        <strong>Challenge 2: Network Latency</strong><br>
+                        Services no longer share memory, now communicate over network.
+                    </p>
+                    <ul>
+                        <li>Solution: API Gateway caching, gRPC for performance, connection pooling</li>
+                        <li>Service mesh (Istio) for advanced traffic management</li>
+                    </ul>
+
+                    <p>
+                        <strong>Challenge 3: Distributed Tracing</strong><br>
+                        Request flows now span multiple services, making debugging harder.
+                    </p>
+                    <ul>
+                        <li>Solution: OpenTelemetry instrumentation across services</li>
+                        <li>DataDog APM for request tracing and dependency mapping</li>
+                    </ul>
+
+                    <p>
+                        <strong>Challenge 4: Team Coordination</strong><br>
+                        Many teams deploying independently can cause coordination issues.
+                    </p>
+                    <ul>
+                        <li>Solution: Clear API contracts (OpenAPI specifications)</li>
+                        <li>Backwards-compatible API versioning</li>
+                        <li>Change notification channels (#deployments Slack)</li>
+                    </ul>
+                </section>
+
+                <section>
+                    <h2>Results: 3x Faster Release Velocity</h2>
+                    <ul>
+                        <li><strong>Before:</strong> Deploy entire monolith once per week (3-4 hours process)</li>
+                        <li><strong>After:</strong> Deploy individual services multiple times per day (5-10 minutes)</li>
+                        <li><strong>Mean Time to Deployment:</strong> 45 minutes → 5 minutes</li>
+                        <li><strong>Mean Time to Recovery:</strong> 30 minutes (git revert) vs 2 hours (monolith rebuild)</li>
+                        <li><strong>Deployment Success Rate:</strong> 95% → 99.5% (easier to test single service)</li>
+                        <li><strong>Team Independence:</strong> Zero cross-team dependency blocks</li>
+                    </ul>
+                </section>
+
+                <section>
+                    <h2>Key Takeaways</h2>
+                    <ul>
+                        <li><strong>GitOps simplifies deployments:</strong> Git becomes source of truth, ArgoCD handles reconciliation</li>
+                        <li><strong>Strangler pattern reduces risk:</strong> Gradual migration beats big-bang</li>
+                        <li><strong>Helm charts standardize:</strong> Consistency across services without sacrificing flexibility</li>
+                        <li><strong>Automation is essential:</strong> Manual deployments don't scale with 30+ services</li>
+                        <li><strong>Monitoring/tracing are critical:</strong> Distributed systems are hard to debug</li>
+                        <li><strong>Versioned everything:</strong> Infrastructure code, Helm charts, APIs</li>
+                    </ul>
+                </section>
+
+                <section>
+                    <h2>Conclusion</h2>
+                    <p>
+                        Migrating from monolith to microservices with GitOps provides both technical and organizational benefits. 
+                        By making Git the source of truth and automating deployments through ArgoCD, we eliminated manual processes, 
+                        reduced risk, and achieved 3x faster release velocity. The journey requires careful planning, but the results 
+                        in developer productivity are well worth the effort.
+                    </p>
+                </section>
+
+                <div style="margin-top: 2rem; padding-top: 2rem; border-top: 1px solid var(--border-color);">
+                    <p><a href="../posts.html">← Back to all posts</a></p>
+                </div>
+            </article>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>&copy; 2025 Subhashree Dhal. All rights reserved.</p>
+        </footer>
+    </div>
+
+    <script src="../js/main.js"></script>
+</body>
+</html>

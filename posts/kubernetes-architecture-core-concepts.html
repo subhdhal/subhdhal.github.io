@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kubernetes Architecture: Core Concepts & Components - Subhashree Dhal</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="icon" type="image/svg+xml" href="../favicon.svg">
+</head>
+<body>
+    <div class="container">
+        <!-- Navigation -->
+        <nav class="nav">
+            <ul class="nav-list">
+                <li><a href="../index.html">home</a></li>
+                <li><a href="../about.html">about</a></li>
+                <li><a href="../posts.html" class="active">posts</a></li>
+                <li><a href="../resume.html">resume</a></li>
+            </ul>
+            <div class="theme-toggle">
+                <button id="theme-btn" class="theme-btn" aria-label="Toggle dark mode">
+                    <svg class="sun-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="content">
+            <article>
+                <h1>Kubernetes Architecture: Core Concepts & Components</h1>
+                <p class="post-date">November 2025</p>
+                
+                <section>
+                    <h2>Introduction</h2>
+                    <p>
+                        Kubernetes is a powerful orchestration platform for containerized applications. Understanding its architecture 
+                        is essential for deploying and managing applications effectively. This post covers the core concepts, components, 
+                        and how they work together.
+                    </p>
+                </section>
+
+                <section>
+                    <h2>What is Kubernetes?</h2>
+                    <p>
+                        Kubernetes is a container orchestration platform that automates:
+                    </p>
+                    <ul>
+                        <li><strong>Deployment:</strong> Place containers on the right nodes</li>
+                        <li><strong>Scaling:</strong> Run multiple copies for high availability</li>
+                        <li><strong>Self-healing:</strong> Replace failed containers automatically</li>
+                        <li><strong>Updates:</strong> Rolling updates without downtime</li>
+                        <li><strong>Networking:</strong> Service discovery and load balancing</li>
+                        <li><strong>Storage:</strong> Persistent and ephemeral storage management</li>
+                        <li><strong>Configuration:</strong> Secrets and config maps</li>
+                    </ul>
+                </section>
+
+                <section>
+                    <h2>Kubernetes Cluster Architecture</h2>
+                    <pre><code>┌────────────────────────────────────────────────────────────┐
+│                  KUBERNETES CLUSTER                         │
+├────────────────────────────────────────────────────────────┤
+│                                                              │
+│  ┌──────────────────────────────────────────────────────┐  │
+│  │        CONTROL PLANE (Master Node)                  │  │
+│  │  Manages cluster state and makes decisions          │  │
+│  ├──────────────────────────────────────────────────────┤  │
+│  │                                                      │  │
+│  │  ┌─────────────────┐  ┌──────────────────────────┐ │  │
+│  │  │  API Server     │  │  etcd (Data Store)       │ │  │
+│  │  │  Entry point    │  │  Stores cluster state    │ │  │
+│  │  │  for all ops    │  │  All config, status      │ │  │
+│  │  └─────────────────┘  └──────────────────────────┘ │  │
+│  │                                                      │  │
+│  │  ┌────────────────────┐  ┌────────────────────────┐ │  │
+│  │  │  Scheduler         │  │  Controller Manager    │ │  │
+│  │  │  Assigns pods      │  │  Runs control loops    │ │  │
+│  │  │  to nodes          │  │  - Deployment         │ │  │
+│  │  │                    │  │  - StatefulSet        │ │  │
+│  │  │                    │  │  - ReplicaSet         │ │  │
+│  │  │                    │  │  - Service            │ │  │
+│  │  └────────────────────┘  └────────────────────────┘ │  │
+│  │                                                      │  │
+│  └──────────────────────────────────────────────────────┘  │
+│                                                              │
+│  ┌──────────────────────────────────────────────────────┐  │
+│  │   WORKER NODES (Can be many)                        │  │
+│  │   Run application containers                        │  │
+│  ├──────────────────────────────────────────────────────┤  │
+│  │                                                      │  │
+│  │  Worker Node 1          Worker Node 2               │  │
+│  │  ┌─────────────────┐   ┌─────────────────┐         │  │
+│  │  │ kubelet         │   │ kubelet         │         │  │
+│  │  │ (Node agent)    │   │ (Node agent)    │         │  │
+│  │  └─────────────────┘   └─────────────────┘         │  │
+│  │  ┌─────────────────┐   ┌─────────────────┐         │  │
+│  │  │ Docker/Runtime  │   │ Docker/Runtime  │         │  │
+│  │  └─────────────────┘   └─────────────────┘         │  │
+│  │  ┌─────────────────┐   ┌─────────────────┐         │  │
+│  │  │ kube-proxy      │   │ kube-proxy      │         │  │
+│  │  │ (Networking)    │   │ (Networking)    │         │  │
+│  │  └─────────────────┘   └─────────────────┘         │  │
+│  │                                                      │  │
+│  │  ┌──────────┐ ┌──────────┐ ┌──────────┐           │  │
+│  │  │ Pod A    │ │ Pod B    │ │ Pod C    │           │  │
+│  │  │ Container│ │Container │ │Container │           │  │
+│  │  └──────────┘ └──────────┘ └──────────┘           │  │
+│  │                                                      │  │
+│  └──────────────────────────────────────────────────────┘  │
+│                                                              │
+└────────────────────────────────────────────────────────────┘</code></pre>
+                </section>
+
+                <section>
+                    <h2>Control Plane Components</h2>
+                    
+                    <h3>1. API Server (kube-apiserver)</h3>
+                    <ul>
+                        <li><strong>Role:</strong> Central hub of Kubernetes cluster</li>
+                        <li><strong>Function:</strong> Exposes REST API for all operations</li>
+                        <li><strong>Responsibilities:</strong>
+                            <ul>
+                                <li>Validate all requests</li>
+                                <li>Write state to etcd</li>
+                                <li>Authenticate and authorize</li>
+                                <li>Support webhooks</li>
+                            </ul>
+                        </li>
+                    </ul>
+
+                    <h3>2. etcd (Cluster Store)</h3>
+                    <ul>
+                        <li><strong>Role:</strong> Distributed key-value store</li>
+                        <li><strong>Function:</strong> Persistent storage for all cluster data</li>
+                        <li><strong>Stores:</strong>
+                            <ul>
+                                <li>Pod specifications</li>
+                                <li>Service definitions</li>
+                                <li>Configuration maps</li>
+                                <li>Status of all resources</li>
+                            </ul>
+                        </li>
+                        <li><strong>Backup:</strong> Must be backed up regularly (critical!)</li>
+                    </ul>
+
+                    <h3>3. Scheduler (kube-scheduler)</h3>
+                    <ul>
+                        <li><strong>Role:</strong> Pod placement coordinator</li>
+                        <li><strong>Function:</strong> Decides which node each pod runs on</li>
+                        <li><strong>Considerations:</strong>
+                            <ul>
+                                <li>Resource requests and limits</li>
+                                <li>Node capacity (CPU, memory)</li>
+                                <li>Affinity rules (pod/node affinity)</li>
+                                <li>Taints and tolerations</li>
+                            </ul>
+                        </li>
+                    </ul>
+
+                    <h3>4. Controller Manager (kube-controller-manager)</h3>
+                    <ul>
+                        <li><strong>Role:</strong> Runs control loops</li>
+                        <li><strong>Function:</strong> Maintains desired cluster state</li>
+                        <li><strong>Built-in Controllers:</strong>
+                            <ul>
+                                <li><strong>Deployment Controller:</strong> Manages deployments and rolling updates</li>
+                                <li><strong>StatefulSet Controller:</strong> Manages stateful applications</li>
+                                <li><strong>DaemonSet Controller:</strong> Ensures pod runs on every node</li>
+                                <li><strong>Job Controller:</strong> Manages jobs that run to completion</li>
+                                <li><strong>Service Controller:</strong> Manages services and endpoints</li>
+                            </ul>
+                        </li>
+                    </ul>
+                </section>
+
+                <section>
+                    <h2>Node Components</h2>
+                    
+                    <h3>1. Kubelet</h3>
+                    <ul>
+                        <li><strong>Role:</strong> Node agent</li>
+                        <li><strong>Function:</strong> Ensures containers run in pods</li>
+                        <li><strong>Responsibilities:</strong>
+                            <ul>
+                                <li>Watch for pod specs assigned to node</li>
+                                <li>Start/stop containers via container runtime</li>
+                                <li>Report node and pod status to API server</li>
+                                <li>Probe container health (liveness, readiness)</li>
+                            </ul>
+                        </li>
+                    </ul>
+
+                    <h3>2. Container Runtime</h3>
+                    <ul>
+                        <li><strong>Role:</strong> Runs containers</li>
+                        <li><strong>Options:</strong>
+                            <ul>
+                                <li>Docker (most common historically)</li>
+                                <li>containerd (now default, lighter)</li>
+                                <li>CRI-O</li>
+                            </ul>
+                        </li>
+                        <li><strong>Function:</strong> Download images, run containers, manage container lifecycle</li>
+                    </ul>
+
+                    <h3>3. kube-proxy</h3>
+                    <ul>
+                        <li><strong>Role:</strong> Network proxy</li>
+                        <li><strong>Function:</strong> Implements Kubernetes Services</li>
+                        <li><strong>Responsibilities:</strong>
+                            <ul>
+                                <li>Maintain network rules on nodes</li>
+                                <li>Service-to-pod load balancing</li>
+                                <li>Network packet forwarding</li>
+                            </ul>
+                        </li>
+                    </ul>
+                </section>
+
+                <section>
+                    <h2>Core Kubernetes Objects</h2>
+                    
+                    <h3>Pod (Smallest deployable unit)</h3>
+                    <pre><code>├─ Pod
+│  ├─ Container 1 (your app)
+│  └─ Container 2 (sidecar/logging)
+│     └─ Volume (shared storage)
+│     └─ IP Address (Kubernetes assigns)
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: my-pod
+spec:
+  containers:
+  - name: app
+    image: myapp:1.0
+    ports:
+    - containerPort: 8080
+  - name: logging
+    image: logging-sidecar:1.0</code></pre>
+
+                    <h3>Deployment (Manages replicas)</h3>
+                    <pre><code>Deployment
+├─ ReplicaSet (manages copies)
+│  ├─ Pod 1
+│  ├─ Pod 2
+│  └─ Pod 3
+└─ Handles rolling updates
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: my-app
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: my-app
+  template:
+    metadata:
+      labels:
+        app: my-app
+    spec:
+      containers:
+      - name: app
+        image: myapp:1.0</code></pre>
+
+                    <h3>Service (Exposes pods to network)</h3>
+                    <pre><code>Service (DNS name + Load Balancer)
+├─ Endpoints (list of pod IPs)
+│  ├─ 10.0.1.100:8080
+│  ├─ 10.0.2.100:8080
+│  └─ 10.0.3.100:8080
+└─ Internal DNS: my-service.default.svc.cluster.local
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: my-service
+spec:
+  selector:
+    app: my-app
+  ports:
+  - port: 80
+    targetPort: 8080
+  type: ClusterIP</code></pre>
+
+                    <h3>ConfigMap & Secret (Configuration)</h3>
+                    <pre><code>ConfigMap (non-sensitive config)
+├─ Database host: db.example.com
+├─ API endpoint: https://api.example.com
+└─ Log level: DEBUG
+
+Secret (sensitive data)
+├─ Database password: (encrypted)
+├─ API token: (encrypted)
+└─ TLS certificate: (encrypted)</code></pre>
+
+                    <h3>PersistentVolume & PersistentVolumeClaim</h3>
+                    <pre><code>PersistentVolume (cluster-wide storage)
+├─ Size: 100 Gi
+├─ Type: AWS EBS / NFS / Local
+└─ AccessMode: ReadWriteOnce
+
+PersistentVolumeClaim (pod requests storage)
+├─ Size needed: 50 Gi
+├─ Matches PV automatically
+└─ Pod uses via volumeMount</code></pre>
+                </section>
+
+                <section>
+                    <h2>Kubernetes Workflow: Pod Deployment</h2>
+                    <pre><code>STEP-BY-STEP POD DEPLOYMENT PROCESS
+
+1. Developer creates manifest
+   cat deployment.yaml
+   ├─ apiVersion: apps/v1
+   ├─ kind: Deployment
+   ├─ metadata
+   └─ spec (desired state)
+
+2. kubectl sends to API Server
+   kubectl apply -f deployment.yaml
+   ↓
+   API Server receives request
+   ├─ Validates YAML schema
+   ├─ Authenticates user
+   ├─ Authorizes permissions
+   └─ Writes desired state to etcd
+
+3. Deployment Controller detects change
+   Watches etcd for changes
+   ├─ Sees new Deployment
+   ├─ Creates ReplicaSet
+   └─ ReplicaSet ensures 3 replicas exist
+
+4. ReplicaSet Controller detects missing pods
+   ├─ Count: Want 3, Have 0
+   ├─ Create 3 Pod objects
+   └─ Write to etcd
+
+5. Scheduler assigns pods to nodes
+   For each unscheduled Pod:
+   ├─ Check resource requirements
+   ├─ Check node capacity
+   ├─ Check affinity rules
+   ├─ Select best node
+   └─ Write pod.spec.nodeName = selected_node
+
+6. kubelet detects pod assignment
+   On assigned node:
+   ├─ kubelet pulls container image
+   ├─ Container runtime creates container
+   ├─ Container starts
+   └─ kubelet reports pod status = Running
+
+7. Service connects to pods
+   Service selector matches pod labels
+   ├─ kube-proxy detects pod
+   ├─ Adds pod IP to endpoint list
+   ├─ Load balancer routes traffic
+   └─ Pods receive traffic at service DNS
+
+8. Complete
+   Deployment is running as desired
+   ├─ 3 pods running across cluster
+   ├─ Service load balancing traffic
+   └─ Self-healing active (replaces failed pods)</code></pre>
+                </section>
+
+                <section>
+                    <h2>Kubernetes Networking Model</h2>
+                    <pre><code>┌─────────────────────────────────────────────┐
+│   Kubernetes Network Architecture           │
+├─────────────────────────────────────────────┤
+│                                              │
+│  Each Pod gets unique IP (even on same node)│
+│                                              │
+│  Node 1                    Node 2            │
+│  ┌──────────┐              ┌──────────┐    │
+│  │ Pod A    │              │ Pod C    │    │
+│  │10.0.1.100│              │10.0.2.100│    │
+│  └──────────┘              └──────────┘    │
+│  ┌──────────┐              ┌──────────┐    │
+│  │ Pod B    │              │ Pod D    │    │
+│  │10.0.1.101│              │10.0.2.101│    │
+│  └──────────┘              └──────────┘    │
+│                                              │
+│  All pods can reach each other directly     │
+│  (Flat networking model - CNI plugin handles)
+│                                              │
+│  Service provides stable DNS name           │
+│  ├─ Service IP: 10.96.0.100                │
+│  ├─ DNS: my-service.default.svc           │
+│  └─ kube-proxy routes to pod IPs          │
+│                                              │
+│  External access via Ingress                │
+│  ├─ Kubernetes-managed load balancer       │
+│  ├─ DNS: example.com → Ingress IP         │
+│  └─ Ingress routes to Services             │
+│                                              │
+└─────────────────────────────────────────────┘
+
+Network Plugins (CNI)
+├─ Flannel (simple, overlay)
+├─ Calico (network policies, high performance)
+├─ Cilium (eBPF-based, advanced features)
+└─ Weave (mesh networking)</code></pre>
+                </section>
+
+                <section>
+                    <h2>Kubernetes Resource Hierarchy</h2>
+                    <pre><code>Cluster
+├─ Namespaces (logical isolation)
+│  ├─ default
+│  ├─ kube-system
+│  ├─ production
+│  └─ staging
+│
+├─ Services (networking)
+│  ├─ Pods (1+ containers each)
+│  ├─ ConfigMaps (configuration)
+│  └─ Secrets (sensitive data)
+│
+├─ Storage
+│  ├─ PersistentVolumes (cluster-wide)
+│  └─ PersistentVolumeClaims (pod-specific)
+│
+├─ Configuration
+│  ├─ RBAC (permissions)
+│  ├─ Network Policies (firewall)
+│  └─ Resource Quotas (limits)
+│
+└─ Deployment Resources
+   ├─ Deployments (stateless apps)
+   ├─ StatefulSets (stateful apps)
+   ├─ DaemonSets (every node)
+   ├─ Jobs (batch processing)
+   └─ CronJobs (scheduled jobs)</code></pre>
+                </section>
+
+                <section>
+                    <h2>High Availability Considerations</h2>
+                    <pre><code>CONTROL PLANE HIGH AVAILABILITY
+
+Traditional: Single control plane = single point of failure
+Recommended: Multiple control planes
+
+HA Control Plane:
+├─ 3 or 5 API Servers (odd number for quorum)
+├─ 3 or 5 etcd instances (separate from API servers)
+├─ Multiple Scheduler instances
+├─ Multiple Controller Manager instances
+├─ Load balancer in front (API Server endpoint)
+└─ Highly available network (no single link failure)
+
+WORKER NODE RESILIENCE
+
+Pod Disruption Budgets:
+├─ Specify minimum pods that must be running
+├─ Kubernetes respects when draining nodes
+└─ Example: min 2 pods of 5 (up to 3 can be evicted)
+
+Node Affinity:
+├─ Spread pods across nodes
+├─ Prefer different zones/regions
+└─ Anti-affinity to avoid co-location</code></pre>
+                </section>
+
+                <section>
+                    <h2>Best Practices</h2>
+                    <ul>
+                        <li><strong>Always use Deployments/StatefulSets:</strong> Don't create raw pods in production</li>
+                        <li><strong>Set resource requests/limits:</strong> Enables scheduler to make good decisions</li>
+                        <li><strong>Use health checks:</strong> Liveness and readiness probes</li>
+                        <li><strong>Implement network policies:</strong> Restrict traffic between pods</li>
+                        <li><strong>Use namespaces:</strong> Organize and isolate resources</li>
+                        <li><strong>RBAC:</strong> Principle of least privilege for service accounts</li>
+                        <li><strong>Monitor cluster:</strong> Watch etcd performance, API latency, node capacity</li>
+                        <li><strong>Backup etcd:</strong> Critical for disaster recovery</li>
+                    </ul>
+                </section>
+
+                <section>
+                    <h2>Conclusion</h2>
+                    <p>
+                        Kubernetes provides a powerful abstraction over infrastructure, enabling teams to focus on containerized applications 
+                        rather than machine management. Understanding the control plane, node components, and core objects is essential for 
+                        effectively deploying and managing applications at scale.
+                    </p>
+                    <p>
+                        The key insight is that Kubernetes works through reconciliation: controllers continuously compare desired state 
+                        (stored in etcd and expressed in YAML) with actual state (running on nodes) and make changes to match the desired state. 
+                        This declarative approach makes Kubernetes reliable and predictable.
+                    </p>
+                </section>
+
+                <div style="margin-top: 2rem; padding-top: 2rem; border-top: 1px solid var(--border-color);">
+                    <p><a href="../posts.html">← Back to all posts</a></p>
+                </div>
+            </article>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>&copy; 2025 Subhashree Dhal. All rights reserved.</p>
+        </footer>
+    </div>
+
+    <script src="../js/main.js"></script>
+</body>
+</html>

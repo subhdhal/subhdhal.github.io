@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Building Internal Developer Platforms: Golden Paths & Service Catalogs - Subhashree Dhal</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="icon" type="image/svg+xml" href="../favicon.svg">
+</head>
+<body>
+    <div class="container">
+        <!-- Navigation -->
+        <nav class="nav">
+            <ul class="nav-list">
+                <li><a href="../index.html">home</a></li>
+                <li><a href="../about.html">about</a></li>
+                <li><a href="../posts.html" class="active">posts</a></li>
+                <li><a href="../resume.html">resume</a></li>
+            </ul>
+            <div class="theme-toggle">
+                <button id="theme-btn" class="theme-btn" aria-label="Toggle dark mode">
+                    <svg class="sun-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="content">
+            <article>
+                <h1>Building Internal Developer Platforms: Golden Paths & Service Catalogs</h1>
+                <p class="post-date">November 2025</p>
+                
+                <section>
+                    <h2>Introduction</h2>
+                    <p>
+                        In modern organizations with distributed microservices architectures, developer experience becomes a critical competitive advantage. 
+                        Internal Developer Platforms (IDPs) are self-service tools that enable teams to provision infrastructure, deploy services, and manage 
+                        their full lifecycle without waiting for platform engineers. In this post, I'll share insights from implementing an IDP that reduced 
+                        service onboarding time by 70%.
+                    </p>
+                </section>
+
+                <section>
+                    <h2>What is an Internal Developer Platform?</h2>
+                    <p>
+                        An IDP is a curated layer of self-service capabilities built on top of your infrastructure. Instead of teams managing raw 
+                        Kubernetes or AWS APIs, they interact with higher-level abstractions tailored to your organization's best practices.
+                    </p>
+                    <p>
+                        Key components of an IDP include:
+                    </p>
+                    <ul>
+                        <li><strong>Service Catalog:</strong> Discoverable, self-documenting services and templates</li>
+                        <li><strong>Golden Paths:</strong> Opinionated, documented paths for common workflows</li>
+                        <li><strong>Developer Portal:</strong> Unified UI for discovering and managing services</li>
+                        <li><strong>Policy Enforcement:</strong> Automated guardrails ensuring security and compliance</li>
+                        <li><strong>Self-Service Infrastructure:</strong> Templated deployments reducing manual steps</li>
+                    </ul>
+                </section>
+
+                <section>
+                    <h2>The Problem We Solved</h2>
+                    <p>
+                        Before implementing our IDP, new microservices took 3-4 weeks to provision:
+                    </p>
+                    <ul>
+                        <li>Teams submitted requests through ticketing systems</li>
+                        <li>Platform engineers manually created infrastructure</li>
+                        <li>Different teams followed different deployment patterns</li>
+                        <li>Security and compliance reviews caused bottlenecks</li>
+                        <li>Inconsistent observability and monitoring setups</li>
+                    </ul>
+                </section>
+
+                <section>
+                    <h2>Golden Paths: The Opinionated Way</h2>
+                    <p>
+                        Golden paths are curated, documented workflows representing best practices for common scenarios. Rather than every team 
+                        reinventing the wheel, we created standardized paths for:
+                    </p>
+                    <pre><code># Example: Golden Path for Deploying a Python API Service
+
+Inputs:
+  - Service Name
+  - Team Name
+  - GitHub Repository URL
+  - Port & Health Check Path
+
+Automated Outputs:
+  1. GitHub Actions CI/CD Pipeline (Docker build, tests, security scans)
+  2. EKS Deployment (with resource limits, replicas, HPA config)
+  3. AWS RDS Database (if needed)
+  4. Application Monitoring (DataDog agent, logging)
+  5. AWS IAM Roles (least-privilege access)
+  6. DNS & Load Balancer Configuration
+  7. Infrastructure Code (versioned, reviewable)</code></pre>
+                    
+                    <p>
+                        The result? Teams can go from zero to production-ready microservice in hours, not weeks.
+                    </p>
+                </section>
+
+                <section>
+                    <h2>Service Catalog: Discoverability at Scale</h2>
+                    <p>
+                        With 30+ microservices across teams, discoverability becomes a challenge. Our service catalog provides:
+                    </p>
+                    <ul>
+                        <li>Metadata about each service (owner, slack channel, on-call runbooks)</li>
+                        <li>Dependencies between services (visualization of service mesh)</li>
+                        <li>Deployment status and health checks</li>
+                        <li>Documentation links and API specifications</li>
+                        <li>Cost allocation per service</li>
+                        <li>Links to logs, metrics, and traces</li>
+                    </ul>
+                </section>
+
+                <section>
+                    <h2>Implementation: Self-Hosted Developer Portal</h2>
+                    <p>
+                        We built our internal developer portal using open-source tools, enabling:
+                    </p>
+                    <pre><code>Technology Stack:
+- Backstage (Developer Portal Framework)
+- Terraform + Helm (Infrastructure Templates)
+- GitHub Actions + ArgoCD (GitOps Workflows)
+- Kubernetes (EKS Cluster)
+- AWS Services (RDS, IAM, VPC, etc.)
+
+Workflow:
+1. Developer navigates portal and selects "Create New Service"
+2. Fills in service details (name, team, repository)
+3. Portal generates scaffolding code and infrastructure
+4. GitHub repo created with CI/CD pipeline
+5. Infrastructure provisioned via Terraform
+6. Service appears in catalog
+7. Developer can immediately deploy</code></pre>
+                </section>
+
+                <section>
+                    <h2>Security & Compliance as Code</h2>
+                    <p>
+                        One major benefit: security and compliance are built-in, not bolted-on later.
+                    </p>
+                    <ul>
+                        <li><strong>Network Isolation:</strong> Every service gets proper VPC/subnet configuration</li>
+                        <li><strong>IAM Policies:</strong> Least-privilege roles generated automatically</li>
+                        <li><strong>Secrets Management:</strong> AWS Secrets Manager integration</li>
+                        <li><strong>Observability:</strong> DataDog agents and logging pre-configured</li>
+                        <li><strong>Scanning:</strong> SAST/DAST/SCA tools run in CI pipeline</li>
+                        <li><strong>Compliance:</strong> Audit trails and compliance reports auto-generated</li>
+                    </ul>
+                </section>
+
+                <section>
+                    <h2>Measuring Success</h2>
+                    <p>
+                        After implementing our IDP with golden paths and service catalogs:
+                    </p>
+                    <ul>
+                        <li><strong>70% reduction</strong> in service onboarding time (3-4 weeks → 1-2 hours)</li>
+                        <li><strong>3x faster</strong> deployment velocity across teams</li>
+                        <li><strong>100% compliance</strong> with security baselines (no manual reviews needed)</li>
+                        <li><strong>50% fewer</strong> platform engineer support tickets</li>
+                        <li><strong>95% developer satisfaction</strong> with self-service experience</li>
+                        <li><strong>Standardized</strong> deployment patterns across 30+ microservices</li>
+                    </ul>
+                </section>
+
+                <section>
+                    <h2>Lessons Learned</h2>
+                    <ul>
+                        <li><strong>Start simple:</strong> Golden paths for 80% use case, custom paths for 20%</li>
+                        <li><strong>Iterate based on feedback:</strong> Platform adoption drives feature prioritization</li>
+                        <li><strong>Document everything:</strong> Clear documentation reduces support burden</li>
+                        <li><strong>Version your infrastructure:</strong> Breaking changes should be communicated</li>
+                        <li><strong>Monitor usage:</strong> Track which paths are used, when they break</li>
+                        <li><strong>Make onboarding easy:</strong> New developers should understand platform in first day</li>
+                    </ul>
+                </section>
+
+                <section>
+                    <h2>Next Steps for Your Organization</h2>
+                    <p>
+                        If you're considering an IDP:
+                    </p>
+                    <ol>
+                        <li>Identify your most common deployment patterns</li>
+                        <li>Start with one golden path for your most frequent use case</li>
+                        <li>Gather feedback from developers</li>
+                        <li>Iterate and expand to more paths</li>
+                        <li>Consider open-source platforms like Backstage, Port, or OpsLevelwrap</li>
+                        <li>Invest in documentation and developer education</li>
+                    </ol>
+                </section>
+
+                <section>
+                    <h2>Conclusion</h2>
+                    <p>
+                        Internal Developer Platforms with golden paths and service catalogs transform how organizations scale engineering. 
+                        By reducing toil and standardizing best practices, teams can focus on building features instead of managing infrastructure. 
+                        The 70% reduction in onboarding time was just the beginning—the real value comes from enabling developers to ship 
+                        secure, reliable code faster.
+                    </p>
+                </section>
+
+                <div style="margin-top: 2rem; padding-top: 2rem; border-top: 1px solid var(--border-color);">
+                    <p><a href="../posts.html">← Back to all posts</a></p>
+                </div>
+            </article>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>&copy; 2025 Subhashree Dhal. All rights reserved.</p>
+        </footer>
+    </div>
+
+    <script src="../js/main.js"></script>
+</body>
+</html>

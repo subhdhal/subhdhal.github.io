@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kubernetes Best Practices for Production - Subhashree Dhal</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="icon" type="image/svg+xml" href="../favicon.svg">
+</head>
+<body>
+    <div class="container">
+        <!-- Navigation -->
+        <nav class="nav">
+            <ul class="nav-list">
+                <li><a href="../index.html">home</a></li>
+                <li><a href="../about.html">about</a></li>
+                <li><a href="../posts.html" class="active">posts</a></li>
+                <li><a href="../resume.html">resume</a></li>
+            </ul>
+            <div class="theme-toggle">
+                <button id="theme-btn" class="theme-btn" aria-label="Toggle dark mode">
+                    <svg class="sun-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="content">
+            <article>
+                <h1>Kubernetes Best Practices for Production</h1>
+                <p class="post-date">November 15, 2025</p>
+                
+                <section>
+                    <h2>Introduction</h2>
+                    <p>
+                        Running Kubernetes in production requires careful planning and adherence to best practices. 
+                        This comprehensive guide covers the essential practices you need to implement to ensure your 
+                        Kubernetes clusters are secure, scalable, and maintainable.
+                    </p>
+                </section>
+
+                <section>
+                    <h2>1. Resource Management</h2>
+                    <p>
+                        Proper resource management is crucial for cluster health and cost optimization. Always define 
+                        resource requests and limits for your containers.
+                    </p>
+                    <pre><code>apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app-deployment
+spec:
+  replicas: 3
+  template:
+    spec:
+      containers:
+      - name: app
+        image: myapp:latest
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"</code></pre>
+                </section>
+
+                <section>
+                    <h2>2. Security Best Practices</h2>
+                    <ul>
+                        <li>Implement Network Policies to restrict traffic between pods</li>
+                        <li>Use Pod Security Policies or Pod Security Standards</li>
+                        <li>Run containers as non-root users</li>
+                        <li>Use ReadOnlyRootFilesystem when possible</li>
+                        <li>Regularly scan container images for vulnerabilities</li>
+                        <li>Implement RBAC for fine-grained access control</li>
+                    </ul>
+                </section>
+
+                <section>
+                    <h2>3. High Availability</h2>
+                    <p>
+                        Design your applications for high availability by:
+                    </p>
+                    <ul>
+                        <li>Using multiple replicas with Pod Disruption Budgets</li>
+                        <li>Spreading pods across multiple nodes using affinity rules</li>
+                        <li>Implementing health checks (liveness and readiness probes)</li>
+                        <li>Using StatefulSets for applications that require identity</li>
+                    </ul>
+                </section>
+
+                <section>
+                    <h2>4. Monitoring and Logging</h2>
+                    <p>
+                        Implement comprehensive monitoring and logging:
+                    </p>
+                    <ul>
+                        <li>Deploy Prometheus for metrics collection</li>
+                        <li>Set up Grafana for visualization</li>
+                        <li>Use centralized logging (ELK, Loki, etc.)</li>
+                        <li>Create meaningful alerts for critical metrics</li>
+                        <li>Monitor cluster health and node resources</li>
+                    </ul>
+                </section>
+
+                <section>
+                    <h2>5. Deployment Strategies</h2>
+                    <p>
+                        Use rolling updates and blue-green deployments to minimize downtime:
+                    </p>
+                    <pre><code>apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app
+spec:
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  template:
+    metadata:
+      labels:
+        app: myapp
+    spec:
+      containers:
+      - name: app
+        image: myapp:v2
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 10</code></pre>
+                </section>
+
+                <section>
+                    <h2>6. Cost Optimization</h2>
+                    <ul>
+                        <li>Use Horizontal Pod Autoscaler (HPA) for automatic scaling</li>
+                        <li>Implement Cluster Autoscaler to scale nodes</li>
+                        <li>Use node affinity to optimize resource usage</li>
+                        <li>Implement resource quotas per namespace</li>
+                        <li>Regular cleanup of unused resources</li>
+                    </ul>
+                </section>
+
+                <section>
+                    <h2>Conclusion</h2>
+                    <p>
+                        Following these best practices ensures your Kubernetes clusters remain secure, scalable, and 
+                        cost-effective. Remember that Kubernetes is a powerful platform that requires continuous learning 
+                        and adaptation to your specific use cases.
+                    </p>
+                </section>
+
+                <div style="margin-top: 2rem; padding-top: 2rem; border-top: 1px solid var(--border-color);">
+                    <p><a href="../posts.html">← Back to all posts</a></p>
+                </div>
+            </article>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>&copy; 2025 Subhashree Dhal. All rights reserved.</p>
+        </footer>
+    </div>
+
+    <script src="../js/main.js"></script>
+</body>
+</html>

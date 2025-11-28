@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Event-Driven Architecture: Building Reactive Systems at Scale - Subhashree Dhal</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="icon" type="image/svg+xml" href="../favicon.svg">
+</head>
+<body>
+    <div class="container">
+        <!-- Navigation -->
+        <nav class="nav">
+            <ul class="nav-list">
+                <li><a href="../index.html">home</a></li>
+                <li><a href="../about.html">about</a></li>
+                <li><a href="../posts.html" class="active">posts</a></li>
+                <li><a href="../resume.html">resume</a></li>
+            </ul>
+            <div class="theme-toggle">
+                <button id="theme-btn" class="theme-btn" aria-label="Toggle dark mode">
+                    <svg class="sun-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="content">
+            <article>
+                <h1>Event-Driven Architecture: Building Reactive Systems at Scale</h1>
+                <p class="post-date">November 2025</p>
+                
+                <section>
+                    <h2>Introduction</h2>
+                    <p>
+                        Event-driven architecture is a design pattern that enables loosely coupled, highly scalable systems. 
+                        Instead of services calling each other directly (request-response), services emit and consume events, 
+                        allowing decoupled communication and asynchronous processing. This post explores event-driven architecture 
+                        concepts, patterns, and implementation strategies.
+                    </p>
+                </section>
+
+                <section>
+                    <h2>Traditional Request-Response vs Event-Driven</h2>
+                    <pre><code>REQUEST-RESPONSE (Tightly Coupled)
+
+User Service → Order Service → Payment Service → Inventory Service
+   │              │              │               │
+   ├─ Waits for response
+   ├─ Direct dependency
+   ├─ All services must be healthy
+   └─ Scaling difficult
+
+Problems:
+❌ Order service blocks while calling Payment
+❌ If Payment is slow, entire request is slow
+❌ If Payment fails, Order fails (cascading failure)
+❌ Hard to add new services without changing Order service
+
+
+EVENT-DRIVEN (Loosely Coupled)
+
+User Service
+   │
+   └─ emit: "OrderCreated" event
+       ├─ Message Queue
+       │  ├─ Payment Service (subscribes)
+       │  │  └─ emit: "PaymentProcessed" event
+       │  │     ├─ Inventory Service (subscribes)
+       │  │     │  └─ emit: "InventoryUpdated" event
+       │  │     ├─ Shipping Service (subscribes)
+       │  │     └─ Notification Service (subscribes)
+       │  │
+       │  └─ Analytics Service (subscribes)
+       │     └─ Log event for reporting
+
+Benefits:
+✅ Order service doesn't wait for responses
+✅ Services are decoupled (don't know about each other)
+✅ If Payment is slow, Order still fast
+✅ If Payment fails, order still created (retry later)
+✅ Easy to add new services (just subscribe to events)
+✅ Scales independently (Payment can handle 1K events/sec)
+✅ Asynchronous (non-blocking)
+✅ Resilient (queues buffer temporary failures)</code></pre>
+                </section>
+
+                <section>
+                    <h2>Event-Driven Architecture Components</h2>
+                    <pre><code>┌─────────────────────────────────────────────────────┐
+│       Event-Driven System Architecture            │
+├─────────────────────────────────────────────────────┤
+│                                                     │
+│  EVENT PRODUCERS (Emit Events)                     │
+│  ├─ User Service (emits: UserRegistered)          │
+│  ├─ Order Service (emits: OrderCreated)           │
+│  ├─ Payment Service (emits: PaymentCompleted)     │
+│  └─ External systems (webhooks from 3rd party)    │
+│     │                                              │
+│     ↓                                              │
+│  ┌──────────────────────────────────────────────┐ │
+│  │   EVENT BUS / MESSAGE BROKER                 │ │
+│  │   ├─ Apache Kafka (log-based, high-volume)   │ │
+│  │   ├─ RabbitMQ (traditional queuing)          │ │
+│  │   ├─ AWS SNS/SQS (cloud-native)              │ │
+│  │   ├─ Google Pub/Sub (streaming)              │ │
+│  │   ├─ Redis Streams (real-time)               │ │
+│  │   └─ Azure Event Hubs (distributed)          │ │
+│  │                                               │ │
+│  │   Stores events temporarily (minutes to days)│ │
+│  │   Enables replay and audit trail             │ │
+│  └──────────────────────────────────────────────┘ │
+│     │ Subscribe                                   │
+│     ├─────────────────┬────────────────┬────────┐ │
+│     ↓                 ↓                ↓        ↓ │
+│  EVENT CONSUMERS (Handle Events)                 │
+│  ├─ Payment Processor                            │
+│  │  └─ subscribes to: OrderCreated              │
+│  │     └─ processes payment                      │
+│  │        └─ emits: PaymentCompleted            │
+│  │                                               │
+│  ├─ Inventory Manager                           │
+│  │  └─ subscribes to: PaymentCompleted          │
+│  │     └─ reserves inventory                     │
+│  │        └─ emits: InventoryReserved           │
+│  │                                               │
+│  ├─ Shipping Service                            │
+│  │  └─ subscribes to: InventoryReserved         │
+│  │     └─ creates shipment                       │
+│  │        └─ emits: ShipmentCreated             │
+│  │                                               │
+│  └─ Analytics Pipeline                          │
+│     └─ subscribes to: ALL events                 │
+│        └─ writes to data warehouse               │
+│           for analysis                           │
+│                                                   │
+│  EVENT STORE (Audit Trail)                       │
+│  ├─ Records all events historically              │
+│  ├─ Enables event replay                         │
+│  ├─ Provides audit compliance                    │
+│  └─ Supports debugging "what happened?"          │
+│                                                   │
+└─────────────────────────────────────────────────────┘</code></pre>
+                </section>
+
+                <section>
+                    <h2>Event Structure & Semantics</h2>
+                    <pre><code>ANATOMY OF AN EVENT
+
+{
+  "eventId": "evt-12345",          // Unique ID
+  "eventType": "OrderCreated",     // What happened
+  "timestamp": "2025-11-26T14:30:00Z",  // When
+  "sourceSystem": "order-service", // Who sent it
+  "aggregateId": "order-789",      // Related entity
+  "version": "1.0",                // Schema version
+  "data": {                        // Event payload
+    "orderId": "order-789",
+    "customerId": "cust-456",
+    "items": [
+      {
+        "productId": "prod-123",
+        "quantity": 2,
+        "price": 29.99
+      }
+    ],
+    "totalAmount": 59.98,
+    "status": "pending"
+  },
+  "metadata": {                    // Additional context
+    "userId": "user-789",          // Who triggered it
+    "correlationId": "corr-111",   // Related request ID
+    "causationId": "evt-111",      // What caused this
+    "userAgent": "web"
+  }
+}
+
+EVENT NAMING CONVENTIONS
+├─ Use past tense: OrderCreated, OrderCancelled
+├─ Include aggregate: ProductPriceChanged
+├─ Be specific: PaymentFailed (not just "Error")
+└─ Version your events: OrderCreatedV2 (when schema changes)
+
+EVENT PROPERTIES
+├─ Immutable: Never modify events, emit new ones
+├─ Idempotent: Safe to process same event twice
+├─ Ordered: Related events in sequence per aggregate
+└─ Timestamped: For debugging and ordering</code></pre>
+                </section>
+
+                <section>
+                    <h2>Event-Driven Patterns</h2>
+                    
+                    <h3>Pattern 1: Event Sourcing</h3>
+                    <p>
+                        Store application state as a sequence of immutable events rather than current state.
+                    </p>
+                    <pre><code>TRADITIONAL STATE STORAGE
+Order Table:
+├─ OrderID: 123
+├─ CustomerID: 456
+├─ Status: "Shipped"
+├─ Total: $100
+└─ Last Updated: 2025-11-26
+
+Problem: Lost history. When did status change? Why?
+
+
+EVENT SOURCING
+Event Log:
+├─ Event 1: OrderCreated (2025-11-26 10:00)
+│  └─ orderId: 123, customerId: 456, total: $100
+├─ Event 2: PaymentProcessed (2025-11-26 10:01)
+│  └─ paymentId: pay-789, amount: $100
+├─ Event 3: InventoryReserved (2025-11-26 10:02)
+│  └─ items reserved
+├─ Event 4: ShipmentCreated (2025-11-26 10:05)
+│  └─ shipmentId: ship-123
+├─ Event 5: OrderShipped (2025-11-26 11:00)
+│  └─ trackingNumber: TRK123
+└─ Event 6: DeliveryConfirmed (2025-11-26 15:30)
+   └─ Signature confirmed
+
+Replay to get current state:
+Start with OrderCreated
+→ Apply PaymentProcessed
+→ Apply InventoryReserved
+→ Apply ShipmentCreated
+→ Apply OrderShipped
+→ Apply DeliveryConfirmed
+= Final state: Status = "Delivered"
+
+Benefits:
+✅ Complete audit trail
+✅ Can replay to fix bugs
+✅ Easier debugging ("what was status at 10:15?")
+✅ Event snapshots for performance</code></pre>
+
+                    <h3>Pattern 2: CQRS (Command Query Responsibility Segregation)</h3>
+                    <p>
+                        Separate read and write models for different optimization needs.
+                    </p>
+                    <pre><code>TRADITIONAL CRUD
+┌──────────────┐
+│   Database   │
+│ (Read+Write) │
+└──────────────┘
+   ↑        ↑
+Write    Read
+   │        │
+User──────User
+
+Problem: Same data structure optimized for both
+         Write model might be poor for reads
+
+
+CQRS PATTERN
+┌──────────────────┐
+│ Write Model (DB) │  Optimized for:
+│                  │  ├─ Transactions
+└──────────────────┘  ├─ Consistency
+       │              ├─ Updates
+       │              └─ Single source of truth
+       │
+    emit events
+       │
+       ↓
+┌──────────────────┐
+│ Read Model (Cache)│ Optimized for:
+│  - Elasticsearch │ ├─ Query speed
+│  - Redis         │ ├─ Aggregations
+│  - DynamoDB      │ ├─ Search
+│  - Memcached     │ └─ Analytics
+└──────────────────┘
+
+Benefits:
+✅ Write model stays simple (ACID)
+✅ Read model optimized for queries
+✅ Can have multiple read models
+✅ Scales independently
+✅ Better performance for complex queries</code></pre>
+
+                    <h3>Pattern 3: Saga (Distributed Transactions)</h3>
+                    <p>
+                        Coordinate long-running transactions across multiple services using events.
+                    </p>
+                    <pre><code>ORCHESTRATION SAGA (Central Coordinator)
+
+     Order Service
+          │
+          ├─ emit: OrderCreated
+          │
+          ↓
+     Saga Orchestrator
+     (Central Controller)
+          │
+          ├─ Call: Payment Service
+          │         └─ Payment successful
+          │
+          ├─ Call: Inventory Service
+          │         └─ Items reserved
+          │
+          ├─ Call: Shipping Service
+          │         └─ Shipment created
+          │
+          └─ Call: Order Service
+             └─ Mark order as complete
+
+Problems:
+❌ Central orchestrator is bottleneck
+❌ Orchestrator must know all services
+❌ Hard to scale (single point of failure)
+
+
+CHOREOGRAPHY SAGA (Distributed Coordination)
+
+Order Service emits: OrderCreated
+     │
+     └─→ Message Queue
+         │
+         ├─ Payment Service (subscribes)
+         │  └─ emits: PaymentProcessed
+         │     │
+         │     └─→ Message Queue
+         │         │
+         │         ├─ Inventory Service (subscribes)
+         │         │  └─ emits: InventoryReserved
+         │         │     │
+         │         │     └─→ Message Queue
+         │         │         │
+         │         │         ├─ Shipping Service (subscribes)
+         │         │         │  └─ emits: ShipmentCreated
+         │         │         │
+         │         │         └─ Order Service (subscribes)
+         │         │            └─ Mark as shipped
+         │         │
+         │         └─ Order Service
+         │            └─ Update payment status
+         │
+         └─ Analytics Service
+            └─ Log event
+
+Benefits:
+✅ No central orchestrator
+✅ Services are decoupled
+✅ Easy to add new services
+✅ Natural fallback handling
+✅ Scales well (distributed)
+
+Handling Failures:
+If Inventory reserve fails:
+├─ Inventory emits: InventoryReservationFailed
+├─ Order Service (subscribes) compensates
+│  └─ emits: OrderCancelled
+└─ Payment Service (subscribes) compensates
+   └─ Refunds payment</code></pre>
+                </section>
+
+                <section>
+                    <h2>Implementation: Order Processing Example</h2>
+                    <pre><code># Event-Driven Order Processing System
+
+# 1. Order Service publishes order creation
+import json
+from kafka import KafkaProducer
+
+producer = KafkaProducer(
+    bootstrap_servers=['localhost:9092'],
+    value_serializer=lambda v: json.dumps(v).encode('utf-8')
+)
+
+def create_order(order_data):
+    # Save to database
+    order = Order.create(order_data)
+    
+    # Emit event to event bus
+    event = {
+        "eventType": "OrderCreated",
+        "orderId": order.id,
+        "customerId": order.customer_id,
+        "totalAmount": order.total,
+        "timestamp": datetime.now().isoformat()
+    }
+    
+    producer.send('order-events', event)
+    return order
+
+
+# 2. Payment Service subscribes to events
+from kafka import KafkaConsumer
+
+consumer = KafkaConsumer(
+    'order-events',
+    bootstrap_servers=['localhost:9092'],
+    value_deserializer=lambda m: json.loads(m.decode('utf-8')),
+    group_id='payment-service'
+)
+
+def process_payments():
+    for message in consumer:
+        event = message.value
+        
+        if event['eventType'] == 'OrderCreated':
+            try:
+                # Process payment
+                payment_result = payment_gateway.charge(
+                    amount=event['totalAmount']
+                )
+                
+                # Emit success event
+                producer.send('payment-events', {
+                    "eventType": "PaymentSucceeded",
+                    "orderId": event['orderId'],
+                    "paymentId": payment_result.id,
+                    "timestamp": datetime.now().isoformat()
+                })
+                
+            except PaymentError as e:
+                # Emit failure event for compensation
+                producer.send('payment-events', {
+                    "eventType": "PaymentFailed",
+                    "orderId": event['orderId'],
+                    "reason": str(e),
+                    "timestamp": datetime.now().isoformat()
+                })
+
+
+# 3. Inventory Service subscribes to payment events
+def process_inventory():
+    inventory_consumer = KafkaConsumer(
+        'payment-events',
+        bootstrap_servers=['localhost:9092'],
+        value_deserializer=lambda m: json.loads(m.decode('utf-8')),
+        group_id='inventory-service'
+    )
+    
+    for message in inventory_consumer:
+        event = message.value
+        
+        if event['eventType'] == 'PaymentSucceeded':
+            order = Order.get(event['orderId'])
+            
+            try:
+                # Reserve inventory
+                for item in order.items:
+                    inventory.reserve(
+                        product_id=item.product_id,
+                        quantity=item.quantity,
+                        order_id=order.id
+                    )
+                
+                # Emit success event
+                producer.send('inventory-events', {
+                    "eventType": "InventoryReserved",
+                    "orderId": event['orderId'],
+                    "timestamp": datetime.now().isoformat()
+                })
+                
+            except InsufficientInventory as e:
+                # Emit failure event (triggers compensation)
+                producer.send('inventory-events', {
+                    "eventType": "InventoryReservationFailed",
+                    "orderId": event['orderId'],
+                    "reason": str(e),
+                    "timestamp": datetime.now().isoformat()
+                })
+
+
+# 4. Order Service subscribes to all events for status updates
+def update_order_status():
+    status_consumer = KafkaConsumer(
+        ['payment-events', 'inventory-events', 'shipping-events'],
+        bootstrap_servers=['localhost:9092'],
+        value_deserializer=lambda m: json.loads(m.decode('utf-8')),
+        group_id='order-service'
+    )
+    
+    for message in status_consumer:
+        event = message.value
+        order = Order.get(event['orderId'])
+        
+        if event['eventType'] == 'PaymentSucceeded':
+            order.payment_status = 'completed'
+        elif event['eventType'] == 'InventoryReserved':
+            order.inventory_status = 'reserved'
+        elif event['eventType'] == 'ShipmentCreated':
+            order.shipping_status = 'in_transit'
+        
+        order.save()</code></pre>
+                </section>
+
+                <section>
+                    <h2>Message Brokers Comparison</h2>
+                    <table style="width:100%; border-collapse: collapse; font-size: 0.9em;">
+                        <tr>
+                            <th style="border: 1px solid var(--border-color); padding: 0.5rem;">Broker</th>
+                            <th style="border: 1px solid var(--border-color); padding: 0.5rem;">Best For</th>
+                            <th style="border: 1px solid var(--border-color); padding: 0.5rem;">Throughput</th>
+                            <th style="border: 1px solid var(--border-color); padding: 0.5rem;">Latency</th>
+                        </tr>
+                        <tr>
+                            <td style="border: 1px solid var(--border-color); padding: 0.5rem;"><strong>Kafka</strong></td>
+                            <td style="border: 1px solid var(--border-color); padding: 0.5rem;">High-volume, log-based, replay</td>
+                            <td style="border: 1px solid var(--border-color); padding: 0.5rem;">Millions/sec</td>
+                            <td style="border: 1px solid var(--border-color); padding: 0.5rem;">~100ms</td>
+                        </tr>
+                        <tr>
+                            <td style="border: 1px solid var(--border-color); padding: 0.5rem;"><strong>RabbitMQ</strong></td>
+                            <td style="border: 1px solid var(--border-color); padding: 0.5rem;">Traditional queuing, complex routing</td>
+                            <td style="border: 1px solid var(--border-color); padding: 0.5rem;">~100K/sec</td>
+                            <td style="border: 1px solid var(--border-color); padding: 0.5rem;">~10ms</td>
+                        </tr>
+                        <tr>
+                            <td style="border: 1px solid var(--border-color); padding: 0.5rem;"><strong>AWS SNS/SQS</strong></td>
+                            <td style="border: 1px solid var(--border-color); padding: 0.5rem;">Cloud-native, serverless</td>
+                            <td style="border: 1px solid var(--border-color); padding: 0.5rem;">Virtually unlimited</td>
+                            <td style="border: 1px solid var(--border-color); padding: 0.5rem;">~10-100ms</td>
+                        </tr>
+                        <tr>
+                            <td style="border: 1px solid var(--border-color); padding: 0.5rem;"><strong>Redis Streams</strong></td>
+                            <td style="border: 1px solid var(--border-color); padding: 0.5rem;">Real-time, low-latency</td>
+                            <td style="border: 1px solid var(--border-color); padding: 0.5rem;">~1M/sec</td>
+                            <td style="border: 1px solid var(--border-color); padding: 0.5rem;">~1-5ms</td>
+                        </tr>
+                    </table>
+                </section>
+
+                <section>
+                    <h2>Challenges & Solutions</h2>
+                    
+                    <h3>Challenge 1: Eventual Consistency</h3>
+                    <p>
+                        <strong>Problem:</strong> Data isn't instantly consistent across services (events take time to process).
+                    </p>
+                    <p>
+                        <strong>Solution:</strong> Design system for eventual consistency. Show accurate data once events are processed.
+                    </p>
+
+                    <h3>Challenge 2: Handling Failures & Retries</h3>
+                    <p>
+                        <strong>Problem:</strong> What if service crashes while processing event?
+                    </p>
+                    <p>
+                        <strong>Solution:</strong> Use idempotent operations (safe to retry). Add tracking to avoid duplicate processing.
+                    </p>
+
+                    <h3>Challenge 3: Ordering Guarantees</h3>
+                    <p>
+                        <strong>Problem:</strong> Events might be processed out of order across the network.
+                    </p>
+                    <p>
+                        <strong>Solution:</strong> Use aggregate ID for ordering. Kafka partitions guarantee ordering per partition.
+                    </p>
+
+                    <h3>Challenge 4: Event Versioning</h3>
+                    <p>
+                        <strong>Problem:</strong> Event schema changes over time. Old events have old format.
+                    </p>
+                    <p>
+                        <strong>Solution:</strong> Version events explicitly. Handle multiple versions in consumers.
+                    </p>
+                </section>
+
+                <section>
+                    <h2>Best Practices</h2>
+                    <ul>
+                        <li><strong>Keep events small:</strong> Send only necessary data, reference full data if needed</li>
+                        <li><strong>Make processing idempotent:</strong> Safe to process same event multiple times</li>
+                        <li><strong>Include correlation IDs:</strong> Track requests across services for debugging</li>
+                        <li><strong>Use event versioning:</strong> Handle schema evolution gracefully</li>
+                        <li><strong>Implement dead-letter queues:</strong> Failed events go here for manual review</li>
+                        <li><strong>Monitor event lag:</strong> Watch how far behind consumers are</li>
+                        <li><strong>Backward compatibility:</strong> Old consumers must handle new event versions</li>
+                        <li><strong>Document events:</strong> Maintain event schema documentation</li>
+                    </ul>
+                </section>
+
+                <section>
+                    <h2>Conclusion</h2>
+                    <p>
+                        Event-driven architecture enables building scalable, loosely coupled systems where services communicate 
+                        asynchronously through events. This pattern is particularly powerful for microservices architectures where 
+                        multiple teams need to work independently.
+                    </p>
+                    <p>
+                        The key benefits—scalability, resilience, decoupling, and auditability—come at the cost of added complexity 
+                        (eventual consistency, distributed tracing, message ordering). Start simple, measure, and add sophistication 
+                        as your system grows.
+                    </p>
+                </section>
+
+                <div style="margin-top: 2rem; padding-top: 2rem; border-top: 1px solid var(--border-color);">
+                    <p><a href="../posts.html">← Back to all posts</a></p>
+                </div>
+            </article>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>&copy; 2025 Subhashree Dhal. All rights reserved.</p>
+        </footer>
+    </div>
+
+    <script src="../js/main.js"></script>
+</body>
+</html>

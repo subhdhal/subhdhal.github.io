@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AWS Security Automation: Building a Cloud-Native Detection & Response Platform - Subhashree Dhal</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="icon" type="image/svg+xml" href="../favicon.svg">
+</head>
+<body>
+    <div class="container">
+        <!-- Navigation -->
+        <nav class="nav">
+            <ul class="nav-list">
+                <li><a href="../index.html">home</a></li>
+                <li><a href="../about.html">about</a></li>
+                <li><a href="../posts.html" class="active">posts</a></li>
+                <li><a href="../resume.html">resume</a></li>
+            </ul>
+            <div class="theme-toggle">
+                <button id="theme-btn" class="theme-btn" aria-label="Toggle dark mode">
+                    <svg class="sun-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="content">
+            <article>
+                <h1>AWS Security Automation: Building a Cloud-Native Detection & Response Platform</h1>
+                <p class="post-date">January 2025</p>
+                
+                <section>
+                    <h2>Introduction</h2>
+                    <p>
+                        In a large enterprise environment, security isn't a one-time configuration—it's a continuous process. With thousands 
+                        of AWS resources across multiple accounts, manual security monitoring becomes impossible. In this post, I'll share how 
+                        we built an automated security detection and response platform that reduced security finding resolution time by 85% 
+                        and improved our compliance posture from 65% to 99.2%.
+                    </p>
+                </section>
+
+                <section>
+                    <h2>The Challenge: Security at Enterprise Scale</h2>
+                    <p>
+                        Managing security across a large AWS organization presents unique challenges:
+                    </p>
+                    <ul>
+                        <li><strong>Account Sprawl:</strong> 50+ AWS accounts across multiple regions</li>
+                        <li><strong>Configuration Drift:</strong> Security baselines inconsistently applied</li>
+                        <li><strong>Detection Latency:</strong> Manual reviews catch issues days or weeks later</li>
+                        <li><strong>Remediation Delay:</strong> Security findings piled up in queues</li>
+                        <li><strong>Compliance Visibility:</strong> Auditors can't verify security controls were applied</li>
+                        <li><strong>Tool Fragmentation:</strong> Multiple security tools with limited integration</li>
+                    </ul>
+                </section>
+
+                <section>
+                    <h2>Architecture: A Layered Security Platform</h2>
+                    <p>
+                        We implemented a comprehensive, layered security architecture:
+                    </p>
+                    <pre><code>┌─────────────────────────────────────────────────────┐
+│         AWS Organizations / Multi-Account            │
+└─────────────────────────────────────────────────────┘
+            ↓
+┌─────────────────────────────────────────────────────┐
+│    Detection Layer (Source of Truth)                 │
+├─────────────────────────────────────────────────────┤
+│ • AWS Security Hub (centralized findings)            │
+│ • GuardDuty (threat detection)                       │
+│ • Config (compliance & drift detection)              │
+│ • Detective (threat investigation)                   │
+│ • Wiz (CNAPP - cloud-native attack surface)          │
+│ • Prisma Cloud (infrastructure & workload)           │
+└─────────────────────────────────────────────────────┘
+            ↓
+┌─────────────────────────────────────────────────────┐
+│    Aggregation & Normalization                       │
+├─────────────────────────────────────────────────────┤
+│ • EventBridge for multi-tool integration             │
+│ • Lambda for finding normalization                   │
+│ • DynamoDB for finding deduplication                 │
+└─────────────────────────────────────────────────────┘
+            ↓
+┌─────────────────────────────────────────────────────┐
+│    Response & Remediation Layer                      │
+├─────────────────────────────────────────────────────┤
+│ • Lambda for automated remediation                   │
+│ • Systems Manager for execution & audit trail        │
+│ • SNS for alerting                                   │
+│ • Slack for incident notification                    │
+└─────────────────────────────────────────────────────┘
+            ↓
+┌─────────────────────────────────────────────────────┐
+│    Visibility & Governance                           │
+├─────────────────────────────────────────────────────┤
+│ • Custom dashboards (Security Hub, CloudWatch)       │
+│ • Compliance reporting (Config, Security Hub)        │
+│ • Audit logging (CloudTrail)                         │
+└─────────────────────────────────────────────────────┘</code></pre>
+                </section>
+
+                <section>
+                    <h2>Foundation 1: Security Hub - Centralized Findings</h2>
+                    <p>
+                        Security Hub aggregates findings from AWS native services and third-party tools:
+                    </p>
+                    <pre><code>aws securityhub enable-security-hub \
+  --region us-east-1 \
+  --tags "Environment=Production,CostCenter=Security"
+
+# Enable AWS Foundational Security Best Practices
+aws securityhub batch-enable-standards \
+  --region us-east-1 \
+  --standards-subscription-requests '{
+    "StandardsArn": "arn:aws:securityhub:us-east-1::standards/aws-foundational-security-best-practices/v/1.0.0"
+  }'
+
+# Custom insights for risk prioritization
+aws securityhub create-insight \
+  --region us-east-1 \
+  --name "Critical Findings" \
+  --filters '{
+    "SeverityLabel": [{"Value": "CRITICAL", "Comparison": "EQUALS"}],
+    "RecordState": [{"Value": "ACTIVE", "Comparison": "EQUALS"}]
+  }'</code></pre>
+
+                    <p>
+                        This gives us a unified view of security findings across all accounts and tools.
+                    </p>
+                </section>
+
+                <section>
+                    <h2>Foundation 2: GuardDuty - Threat Detection</h2>
+                    <p>
+                        GuardDuty uses machine learning to detect threats in real-time:
+                    </p>
+                    <pre><code># Enable GuardDuty across organization
+aws guardduty create-detector \
+  --region us-east-1 \
+  --enable \
+  --finding-publishing-frequency FIFTEEN_MINUTES \
+  --detector-resource-tags "Environment=Production"
+
+# Setup CloudWatch Events to trigger on findings
+aws events put-rule \
+  --name "GuardDuty-Findings" \
+  --event-pattern '{
+    "source": ["aws.guardduty"],
+    "detail-type": ["GuardDuty Finding"],
+    "detail": {
+      "severity": [7, 7.0, 7.1, 7.2, 7.3, 7.4, 7.5, 7.6, 7.7, 7.8, 7.9, 8, 8.0, 8.1, 8.2, 8.3, 8.4, 8.5, 8.6, 8.7, 8.8, 8.9]
+    }
+  }'</code></pre>
+
+                    <p>
+                        GuardDuty automatically detects:
+                    </p>
+                    <ul>
+                        <li>Compromised EC2 instances communicating with malicious IPs</li>
+                        <li>Unusual API calls and data access patterns</li>
+                        <li>Cryptocurrency mining attempts</li>
+                        <li>Unauthorized deployments or infrastructure changes</li>
+                    </ul>
+                </section>
+
+                <section>
+                    <h2>Foundation 3: AWS Config - Compliance Tracking</h2>
+                    <p>
+                        AWS Config tracks configuration changes and checks compliance rules:
+                    </p>
+                    <pre><code># Deploy Config rules for security compliance
+aws configservice put-config-rule \
+  --config-rule '{
+    "ConfigRuleName": "encrypted-volumes",
+    "Description": "Checks whether EBS volumes are encrypted",
+    "Scope": {
+      "ComplianceResourceTypes": ["AWS::EC2::Volume"]
+    },
+    "Source": {
+      "Owner": "AWS",
+      "SourceIdentifier": "ENCRYPTED_VOLUMES"
+    }
+  }'
+
+# Common security rules we enforce
+Rules:
+  - "root-account-mfa-enabled"
+  - "iam-password-policy"
+  - "s3-bucket-public-read-prohibited"
+  - "s3-bucket-public-write-prohibited"
+  - "restricted-ssh"
+  - "ec2-security-group-ssh-check"
+  - "cloudtrail-enabled"
+  - "multi-region-cloudtrail-enabled"</code></pre>
+
+                    <p>
+                        Config continuously evaluates resources and reports compliance status.
+                    </p>
+                </section>
+
+                <section>
+                    <h2>Integration 1: EventBridge for Multi-Tool Orchestration</h2>
+                    <p>
+                        EventBridge unifies events from all sources:
+                    </p>
+                    <pre><code># EventBridge rule to capture all critical security findings
+aws events put-rule \
+  --name "Critical-Security-Findings" \
+  --description "Route critical findings to remediation pipeline" \
+  --event-pattern '{
+    "source": ["aws.securityhub"],
+    "detail-type": ["Security Hub Findings - Imported"],
+    "detail": {
+      "findings": {
+        "Severity": {
+          "Label": ["CRITICAL", "HIGH"]
+        },
+        "Compliance": {
+          "Status": ["FAILED"]
+        }
+      }
+    }
+  }' \
+  --state ENABLED
+
+# Add targets for remediation
+aws events put-targets \
+  --rule "Critical-Security-Findings" \
+  --targets "Id"="1","Arn"="arn:aws:lambda:us-east-1:ACCOUNT_ID:function:SecurityFindings"</code></pre>
+                </section>
+
+                <section>
+                    <h2>Response: Automated Remediation with Lambda</h2>
+                    <p>
+                        Lambda functions execute remediation automatically:
+                    </p>
+                    <pre><code>import json
+import boto3
+
+securityhub = boto3.client('securityhub')
+ec2 = boto3.client('ec2')
+config = boto3.client('config')
+
+def lambda_handler(event, context):
+    """
+    Automatically remediate common security findings
+    """
+    
+    findings = event['detail']['findings']
+    
+    for finding in findings:
+        finding_id = finding['Id']
+        resource_type = finding['Resources'][0]['Type']
+        resource_id = finding['Resources'][0]['Id']
+        
+        title = finding['Title']
+        severity = finding['Severity']['Label']
+        
+        remediation_status = "FAILED"
+        error_message = ""
+        
+        try:
+            # Example 1: Public S3 bucket detected
+            if title == "S3 Block Public Access is not enabled":
+                s3 = boto3.client('s3')
+                bucket_name = resource_id.split(':')[-1]
+                
+                s3.put_public_access_block(
+                    Bucket=bucket_name,
+                    PublicAccessBlockConfiguration={
+                        'BlockPublicAcls': True,
+                        'IgnorePublicAcls': True,
+                        'BlockPublicPolicy': True,
+                        'RestrictPublicBuckets': True
+                    }
+                )
+                remediation_status = "SUCCESS"
+            
+            # Example 2: Security group with open SSH (0.0.0.0/0)
+            elif "Unrestricted SSH" in title:
+                sg_id = resource_id.split('/')[-1]
+                
+                ec2.revoke_security_group_ingress(
+                    GroupId=sg_id,
+                    IpPermissions=[{
+                        'IpProtocol': 'tcp',
+                        'FromPort': 22,
+                        'ToPort': 22,
+                        'IpRanges': [{'CidrIp': '0.0.0.0/0'}]
+                    }]
+                )
+                remediation_status = "SUCCESS"
+            
+            # Example 3: Unencrypted EBS volume
+            elif "Unencrypted" in title and "EBS" in title:
+                # Cannot encrypt existing volume, tag for manual intervention
+                volume_id = resource_id.split('/')[-1]
+                
+                ec2.create_tags(
+                    Resources=[volume_id],
+                    Tags=[{'Key': 'AutoRemediation', 'Value': 'RequiresManualAction'}]
+                )
+                remediation_status = "MANUAL_INTERVENTION_REQUIRED"
+            
+            # Example 4: CloudTrail not enabled
+            elif "CloudTrail" in title and "enabled" in title:
+                cloudtrail = boto3.client('cloudtrail')
+                
+                cloudtrail.start_logging(Name='organization-trail')
+                remediation_status = "SUCCESS"
+        
+        except Exception as e:
+            error_message = str(e)
+            remediation_status = "FAILED"
+        
+        # Update finding with remediation status
+        update_finding(finding_id, remediation_status, error_message)
+    
+    return {
+        'statusCode': 200,
+        'body': json.dumps('Remediation completed')
+    }
+
+def update_finding(finding_id, status, error):
+    """Update Security Hub finding with remediation result"""
+    
+    securityhub.batch_update_findings(
+        FindingIdentifiers=[{'Id': finding_id}],
+        Note={'Text': f'Automated Remediation: {status}. {error}'},
+        UserDefinedFields={'RemediationAttempted': 'True'}
+    )</code></pre>
+                </section>
+
+                <section>
+                    <h2>Integration 2: Wiz CNAPP for Application-Centric Security</h2>
+                    <p>
+                        Wiz provides cloud-native attack path analysis:
+                    </p>
+                    <ul>
+                        <li><strong>Attack Path Analysis:</strong> Shows how attackers could move from exposed resource to sensitive data</li>
+                        <li><strong>Context-Aware Risk Scoring:</strong> Not just "is this vulnerable" but "how exploitable is it"</li>
+                        <li><strong>Kubernetes Security:</strong> Container image vulnerabilities, runtime policies</li>
+                        <li><strong>IaC Scanning:</strong> Detects issues before deployment</li>
+                        <li><strong>Integration with Security Hub:</strong> Exports findings for centralized view</li>
+                    </ul>
+
+                    <p>
+                        Key findings Wiz caught that AWS Config missed:
+                    </p>
+                    <ul>
+                        <li>Container with vulnerable library + exposed to internet = critical</li>
+                        <li>EC2 with IAM role that can assume role to production account</li>
+                        <li>S3 bucket accessible from Lambda → external API endpoint (data exfiltration risk)</li>
+                    </ul>
+                </section>
+
+                <section>
+                    <h2>Integration 3: Prisma Cloud for Infrastructure & Workload Security</h2>
+                    <p>
+                        Prisma Cloud provides infrastructure-as-code scanning and runtime security:
+                    </p>
+                    <pre><code>Prisma Cloud Coverage:
+
+1. IaC Scanning (pre-deployment)
+   - Terraform: Missing encryption, open security groups
+   - CloudFormation: Hardcoded credentials, public resources
+   - Kubernetes: Insecure defaults, privilege escalation risks
+
+2. Runtime Security (post-deployment)
+   - Container image scanning: CVE detection
+   - Kubernetes audit: Suspicious pod behavior, privilege escalation
+   - Serverless: Function configuration issues, excessive permissions
+
+3. API Security
+   - Data exposure risk
+   - Authentication/authorization issues
+   - Rate limiting and DoS protection gaps</code></pre>
+                </section>
+
+                <section>
+                    <h2>Incident Response Automation</h2>
+                    <p>
+                        When critical findings are detected, our system automatically:
+                    </p>
+                    <pre><code>Critical Finding Detected → EventBridge Event
+    ↓
+1. Immediate Response
+   - Post to Slack #security-incidents channel
+   - Create PagerDuty incident
+   - Tag resource in AWS for tracking
+   
+2. Auto Remediation (Safe Rules Only)
+   - Block S3 public access
+   - Revoke overly permissive IAM policies
+   - Enable encryption on new resources
+   - Create backup of compromised volume
+   
+3. Forensics & Investigation
+   - Capture VPC Flow Logs
+   - Enable AWS Detective investigation
+   - Preserve evidence for compliance audit
+   - Generate incident timeline
+   
+4. Communication & Approval
+   - Notify resource owner via Slack
+   - Send approval request for risky actions
+   - Log all remediation actions in CloudTrail
+   
+5. Compliance & Reporting
+   - Update Security Hub finding status
+   - Record remediation evidence
+   - Generate audit report</code></pre>
+                </section>
+
+                <section>
+                    <h2>Key Metrics: 85% Improvement in Finding Resolution</h2>
+                    <ul>
+                        <li><strong>Before Automation:</strong>
+                            <ul>
+                                <li>Manual finding review: 2-3 days</li>
+                                <li>Remediation approval: 2-5 days</li>
+                                <li>Resolution time: 7-14 days</li>
+                                <li>Compliance score: 65%</li>
+                            </ul>
+                        </li>
+                        <li><strong>After Automation:</strong>
+                            <ul>
+                                <li>Automated detection: minutes</li>
+                                <li>Auto-remediation (safe rules): &lt;5 minutes</li>
+                                <li>Approval for risky changes: 1-2 hours</li>
+                                <li>Resolution time: 85% of findings &lt;24 hours</li>
+                                <li>Compliance score: 99.2%</li>
+                            </ul>
+                        </li>
+                    </ul>
+                </section>
+
+                <section>
+                    <h2>Best Practices Learned</h2>
+                    <ul>
+                        <li><strong>Start with Detection:</strong> Get visibility before attempting remediation</li>
+                        <li><strong>Automate Only Safe Actions:</strong> Manual approval for actions that could break services</li>
+                        <li><strong>Centralize Logs:</strong> Security findings only valuable if stored for audit trail</li>
+                        <li><strong>Multi-Tool Approach:</strong> No single tool catches everything—layer different detection methods</li>
+                        <li><strong>Classify by Risk:</strong> Focus remediation effort on critical attack paths, not just vulnerable components</li>
+                        <li><strong>Test Remediation:</strong> Automate in non-prod first, validate before production</li>
+                        <li><strong>Monitor the Monitors:</strong> Ensure your security tools are accessible and haven't been tampered with</li>
+                    </ul>
+                </section>
+
+                <section>
+                    <h2>Conclusion</h2>
+                    <p>
+                        Enterprise-scale security requires automation. By combining AWS native services (Security Hub, GuardDuty, Config) 
+                        with third-party tools (Wiz, Prisma Cloud) and orchestrating through EventBridge and Lambda, we built a platform 
+                        that detects threats in minutes and remediates in hours. The 85% improvement in finding resolution time means security 
+                        issues that would have taken weeks to address are now fixed almost immediately.
+                    </p>
+                    <p>
+                        The key insight: <strong>Security at scale is not about manual processes—it's about building systems that detect and 
+                        respond faster than humans can.</strong>
+                    </p>
+                </section>
+
+                <div style="margin-top: 2rem; padding-top: 2rem; border-top: 1px solid var(--border-color);">
+                    <p><a href="../posts.html">← Back to all posts</a></p>
+                </div>
+            </article>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>&copy; 2025 Subhashree Dhal. All rights reserved.</p>
+        </footer>
+    </div>
+
+    <script src="../js/main.js"></script>
+</body>
+</html>

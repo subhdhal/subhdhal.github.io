@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Setting Up a Robust CI/CD Pipeline - Subhashree Dhal</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="icon" type="image/svg+xml" href="../favicon.svg">
+</head>
+<body>
+    <div class="container">
+        <!-- Navigation -->
+        <nav class="nav">
+            <ul class="nav-list">
+                <li><a href="../index.html">home</a></li>
+                <li><a href="../about.html">about</a></li>
+                <li><a href="../posts.html" class="active">posts</a></li>
+                <li><a href="../resume.html">resume</a></li>
+            </ul>
+            <div class="theme-toggle">
+                <button id="theme-btn" class="theme-btn" aria-label="Toggle dark mode">
+                    <svg class="sun-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="content">
+            <article>
+                <h1>Setting Up a Robust CI/CD Pipeline</h1>
+                <p class="post-date">September 10, 2025</p>
+                
+                <section>
+                    <h2>Introduction</h2>
+                    <p>
+                        A robust CI/CD pipeline is fundamental to modern software development. This guide covers 
+                        setting up a complete pipeline for automated testing, building, and deploying applications.
+                    </p>
+                </section>
+
+                <section>
+                    <h2>Key Components</h2>
+                    <ul>
+                        <li><strong>Source Control:</strong> GitHub, GitLab, or Bitbucket</li>
+                        <li><strong>CI/CD Platform:</strong> Jenkins, GitLab CI, GitHub Actions, or CircleCI</li>
+                        <li><strong>Build Tools:</strong> Docker, Maven, Gradle, npm, or similar</li>
+                        <li><strong>Testing Frameworks:</strong> Jest, pytest, JUnit, or similar</li>
+                        <li><strong>Deployment Targets:</strong> Kubernetes, EC2, Lambda, or other platforms</li>
+                    </ul>
+                </section>
+
+                <section>
+                    <h2>Pipeline Stages</h2>
+                    <pre><code>1. Trigger (on push/PR)
+   ↓
+2. Build
+   - Checkout code
+   - Build artifact
+   - Build Docker image
+   ↓
+3. Test
+   - Run unit tests
+   - Run integration tests
+   - Code coverage checks
+   - Security scanning
+   ↓
+4. Staging Deployment
+   - Deploy to staging environment
+   - Run smoke tests
+   ↓
+5. Approval
+   - Manual approval for production
+   ↓
+6. Production Deployment
+   - Deploy to production
+   - Health checks
+   - Rollback on failure</code></pre>
+                </section>
+
+                <section>
+                    <h2>GitHub Actions Example</h2>
+                    <pre><code>name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v2
+    
+    - name: Set up Node.js
+      uses: actions/setup-node@v2
+      with:
+        node-version: '16'
+    
+    - name: Install dependencies
+      run: npm ci
+    
+    - name: Run tests
+      run: npm test
+    
+    - name: Build
+      run: npm run build
+    
+    - name: Build Docker image
+      run: docker build -t my-app:${{ github.sha }} .
+    
+    - name: Push to registry
+      if: github.ref == 'refs/heads/main'
+      run: |
+        docker login -u ${{ secrets.DOCKER_USER }} -p ${{ secrets.DOCKER_PASS }}
+        docker push my-app:${{ github.sha }}
+    
+    - name: Deploy to production
+      if: github.ref == 'refs/heads/main'
+      run: kubectl set image deployment/my-app my-app=my-app:${{ github.sha }}</code></pre>
+                </section>
+
+                <section>
+                    <h2>Best Practices</h2>
+                    <ul>
+                        <li>Keep pipelines fast - aim for 5-10 minute builds</li>
+                        <li>Fail fast on critical issues</li>
+                        <li>Use caching for dependencies and build artifacts</li>
+                        <li>Implement automated testing at multiple levels</li>
+                        <li>Use infrastructure as code for deployments</li>
+                        <li>Implement rollback mechanisms</li>
+                        <li>Monitor and log pipeline executions</li>
+                        <li>Use environment-specific configurations</li>
+                        <li>Implement security scanning in the pipeline</li>
+                        <li>Document your pipeline stages</li>
+                    </ul>
+                </section>
+
+                <section>
+                    <h2>Conclusion</h2>
+                    <p>
+                        A well-designed CI/CD pipeline accelerates development while maintaining quality and reliability. 
+                        Start simple and incrementally add stages as your needs grow.
+                    </p>
+                </section>
+
+                <div style="margin-top: 2rem; padding-top: 2rem; border-top: 1px solid var(--border-color);">
+                    <p><a href="../posts.html">← Back to all posts</a></p>
+                </div>
+            </article>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>&copy; 2025 Subhashree Dhal. All rights reserved.</p>
+        </footer>
+    </div>
+
+    <script src="../js/main.js"></script>
+</body>
+</html>

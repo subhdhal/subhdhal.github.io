@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Infrastructure as Code with Terraform on AWS - Subhashree Dhal</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="icon" type="image/svg+xml" href="../favicon.svg">
+</head>
+<body>
+    <div class="container">
+        <!-- Navigation -->
+        <nav class="nav">
+            <ul class="nav-list">
+                <li><a href="../index.html">home</a></li>
+                <li><a href="../about.html">about</a></li>
+                <li><a href="../posts.html" class="active">posts</a></li>
+                <li><a href="../resume.html">resume</a></li>
+            </ul>
+            <div class="theme-toggle">
+                <button id="theme-btn" class="theme-btn" aria-label="Toggle dark mode">
+                    <svg class="sun-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="content">
+            <article>
+                <h1>Infrastructure as Code with Terraform on AWS</h1>
+                <p class="post-date">October 28, 2025</p>
+                
+                <section>
+                    <h2>What is Infrastructure as Code?</h2>
+                    <p>
+                        Infrastructure as Code (IaC) is the practice of defining infrastructure through code files 
+                        rather than manual configuration. This approach brings version control, testing, and automation 
+                        to infrastructure management.
+                    </p>
+                </section>
+
+                <section>
+                    <h2>Why Terraform?</h2>
+                    <p>
+                        Terraform is an excellent choice for IaC because it:
+                    </p>
+                    <ul>
+                        <li>Supports multiple cloud providers (AWS, Azure, GCP, etc.)</li>
+                        <li>Uses declarative syntax (HCL) that's easy to read and understand</li>
+                        <li>Provides state management for tracking resources</li>
+                        <li>Enables version control of infrastructure</li>
+                        <li>Offers powerful interpolation and module system</li>
+                    </ul>
+                </section>
+
+                <section>
+                    <h2>Basic Terraform Structure</h2>
+                    <pre><code># providers.tf
+terraform {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 5.0"
+    }
+  }
+}
+
+provider "aws" {
+  region = "us-east-1"
+}
+
+# main.tf
+resource "aws_vpc" "main" {
+  cidr_block           = "10.0.0.0/16"
+  enable_dns_hostnames = true
+
+  tags = {
+    Name = "main-vpc"
+  }
+}
+
+resource "aws_subnet" "public" {
+  vpc_id            = aws_vpc.main.id
+  cidr_block        = "10.0.1.0/24"
+  availability_zone = "us-east-1a"
+
+  tags = {
+    Name = "public-subnet"
+  }
+}
+
+# variables.tf
+variable "instance_type" {
+  description = "EC2 instance type"
+  type        = string
+  default     = "t3.micro"
+}
+
+# outputs.tf
+output "vpc_id" {
+  value       = aws_vpc.main.id
+  description = "ID of the VPC"
+}</code></pre>
+                </section>
+
+                <section>
+                    <h2>State Management</h2>
+                    <p>
+                        Terraform maintains a state file that tracks the current state of your infrastructure. 
+                        For production, always store state remotely in S3 with locking enabled:
+                    </p>
+                    <pre><code>terraform {
+  backend "s3" {
+    bucket         = "my-terraform-state"
+    key            = "prod/terraform.tfstate"
+    region         = "us-east-1"
+    encrypt        = true
+    dynamodb_table = "terraform-locks"
+  }
+}</code></pre>
+                </section>
+
+                <section>
+                    <h2>Modules for Reusability</h2>
+                    <p>
+                        Use Terraform modules to create reusable infrastructure components:
+                    </p>
+                    <pre><code># modules/ec2/main.tf
+resource "aws_instance" "web" {
+  ami           = var.ami_id
+  instance_type = var.instance_type
+  key_name      = var.key_name
+
+  tags = {
+    Name = var.instance_name
+  }
+}
+
+# modules/ec2/variables.tf
+variable "instance_type" {
+  type = string
+}
+
+variable "ami_id" {
+  type = string
+}
+
+# root/main.tf
+module "web_server" {
+  source = "./modules/ec2"
+  
+  instance_type  = "t3.small"
+  ami_id         = "ami-0c55b159cbfafe1f0"
+  instance_name  = "web-server"
+  key_name       = aws_key_pair.deployer.key_name
+}</code></pre>
+                </section>
+
+                <section>
+                    <h2>Best Practices</h2>
+                    <ul>
+                        <li>Always use version constraints in provider and module declarations</li>
+                        <li>Implement proper state locking with DynamoDB</li>
+                        <li>Use consistent naming conventions</li>
+                        <li>Separate concerns with multiple files and modules</li>
+                        <li>Use workspaces to manage multiple environments</li>
+                        <li>Implement code review workflows for infrastructure changes</li>
+                        <li>Document your modules and infrastructure</li>
+                        <li>Use terraform plan before applying changes</li>
+                    </ul>
+                </section>
+
+                <section>
+                    <h2>Conclusion</h2>
+                    <p>
+                        Terraform enables you to manage AWS infrastructure efficiently, reliably, and with version control. 
+                        By following IaC best practices, you create reproducible, maintainable infrastructure that scales 
+                        with your organization.
+                    </p>
+                </section>
+
+                <div style="margin-top: 2rem; padding-top: 2rem; border-top: 1px solid var(--border-color);">
+                    <p><a href="../posts.html">← Back to all posts</a></p>
+                </div>
+            </article>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>&copy; 2025 Subhashree Dhal. All rights reserved.</p>
+        </footer>
+    </div>
+
+    <script src="../js/main.js"></script>
+</body>
+</html>
